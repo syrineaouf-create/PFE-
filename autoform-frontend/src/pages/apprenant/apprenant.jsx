@@ -152,7 +152,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
   const [showResModal, setShowResModal] = useState(false);
   const [resFormations, setResFormations] = useState([]);
-  const [resFormState, setResFormState] = useState({ formation: '', mode_formation: 'Présentiel' });
+  const [resFormState, setResFormState] = useState({ formation: '', niveau_tia: '', mode_formation: 'Weekend', session_id: '' });
   const [resApiState, setResApiState] = useState(''); // '' | 'loading' | 'success' | 'error'
 
   const handleReserveSubmit = () => {
@@ -163,7 +163,9 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       email: me.email,
       telephone: me.telephone || "00000000",
       formation: resFormState.formation,
+      niveau_tia: resFormState.niveau_tia,
       mode_formation: resFormState.mode_formation,
+      session_id: resFormState.session_id,
       profil_candidat: me.profil || 'Étudiant'
     }).then(res => {
       setResApiState('success');
@@ -228,6 +230,75 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
   const mySessions = me.session_id
     ? sessions.filter(s => s.id === me.session_id)
     : sessions.filter(s => s.formation === me.formation);
+  
+  // --- LOGIQUE FILTRES RÉSERVATION SAAS ---
+  const meBase = (me?.formation || "").toLowerCase();
+  let myTiaLevel = 0;
+  if (meBase.includes('tia')) {
+     if (meBase.includes('expert')) myTiaLevel = 3;
+     else if (meBase.includes('avanc')) myTiaLevel = 2;
+     else myTiaLevel = 1;
+  }
+  
+  let maxTiaLevel = myTiaLevel;
+  const futureBases = [];
+  if (me?.reservations_futures && Array.isArray(me.reservations_futures)) {
+    me.reservations_futures.forEach(r => {
+        const fb = (r.formation || "").toLowerCase();
+        futureBases.push(fb);
+        if (fb.includes('tia')) {
+           if (fb.includes('expert')) maxTiaLevel = Math.max(maxTiaLevel, 3);
+           else if (fb.includes('avanc')) maxTiaLevel = Math.max(maxTiaLevel, 2);
+           else maxTiaLevel = Math.max(maxTiaLevel, 1);
+        }
+    });
+  }
+
+  const availableResFormations = resFormations.filter(f => {
+      const fBase = f.titre.toLowerCase();
+      if (fBase.includes('tia')) return maxTiaLevel < 3;
+      if (meBase.includes(fBase) || futureBases.some(fb => fb.includes(fBase))) return false;
+      return true;
+  });
+
+  const isTiaSelected = resFormState.formation.toLowerCase().includes('tia');
+  const availableNiveaux = [];
+  if (isTiaSelected) {
+      if (maxTiaLevel < 1) availableNiveaux.push("Basique");
+      if (maxTiaLevel < 2) availableNiveaux.push("Avancé");
+      if (maxTiaLevel < 3) availableNiveaux.push("Expert");
+  }
+
+  const finalFormationName = (isTiaSelected && resFormState.niveau_tia)
+      ? `${resFormState.formation} - Niveau ${resFormState.niveau_tia}`
+      : resFormState.formation;
+
+  const mySessionDates = mySessions.filter(s => s.date_debut && s.date_fin).map(s => ({ start: new Date(s.date_debut), end: new Date(s.date_fin) }));
+  if (me?.reservations_futures && Array.isArray(me.reservations_futures)) {
+      me.reservations_futures.forEach(r => {
+          if (r.session_id) {
+             const rs = sessions.find(s => s.id == r.session_id);
+             if (rs && rs.date_debut && rs.date_fin) {
+                 mySessionDates.push({ start: new Date(rs.date_debut), end: new Date(rs.date_fin) });
+             }
+          }
+      });
+  }
+
+  const availableSessionsForRes = sessions.filter(s => 
+      (s.statut === "Planifiée" || s.statut === "En cours") && 
+      (s.formation === finalFormationName || s.formation === resFormState.formation)
+  ).map(s => {
+      let overlap = false;
+      if (s.date_debut && s.date_fin) {
+          const sSt = new Date(s.date_debut);
+          const sEn = new Date(s.date_fin);
+          overlap = mySessionDates.some(myD => sSt <= myD.end && sEn >= myD.start);
+      }
+      return { ...s, overlap };
+  });
+  // --- FIN LOGIQUE ---
+
   const isPaid = me.statut === "Payé" || me.paiement === "Payé";
   const isSessionFinished = me.statut === "Certifié" || mySessions.some(s => s.date_fin && new Date(s.date_fin) < new Date());
 
@@ -858,35 +929,64 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             {/* Modal Interne de Réservation SaaS */}
             {showResModal && (
               <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,28,63,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
-                <div style={{ background: C.white, width: 440, maxWidth: "90%", borderRadius: 20, padding: 32, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
+                <div style={{ background: C.white, width: 480, maxWidth: "90%", borderRadius: 20, padding: 32, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
                   <h2 style={{ fontFamily: "'Cormorant Garamond',serif", color: C.navy, margin: "0 0 16px 0", fontSize: 24 }}>Réserver une place</h2>
-                  <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 24 }}>Choisissez votre prochaine aventure. Votre demande sera examinée par l'administration.</p>
+                  <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 24 }}>Sélectionnez une nouvelle formation. Les options indisponibles pour votre parcours ou en chevauchement sont masquées.</p>
                   
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Formation souhaitée</label>
-                      <select value={resFormState.formation} onChange={e => setResFormState({...resFormState, formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Formation souhaitée *</label>
+                      <select value={resFormState.formation} onChange={e => setResFormState({...resFormState, formation: e.target.value, niveau_tia: '', session_id: ''})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
                         <option value="" disabled>Sélectionnez une formation</option>
-                        {resFormations.map(f => <option key={f.id} value={f.titre}>{f.titre}</option>)}
+                        {availableResFormations.map(f => <option key={f.id} value={f.titre}>{f.titre}</option>)}
                       </select>
                     </div>
+
+                    {isTiaSelected && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Niveau TIA Portal *</label>
+                        <select value={resFormState.niveau_tia} onChange={e => setResFormState({...resFormState, niveau_tia: e.target.value, session_id: ''})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                          <option value="" disabled>Sélectionnez votre niveau</option>
+                          {availableNiveaux.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                        </select>
+                      </div>
+                    )}
                     
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Mode de participation</label>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Mode de participation *</label>
                       <select value={resFormState.mode_formation} onChange={e => setResFormState({...resFormState, mode_formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
-                        <option value="Présentiel">Présentiel</option>
-                        <option value="Ligne">En ligne</option>
-                        <option value="Mixte">Mixte</option>
+                        <option value="Weekend">Weekend</option>
+                        <option value="1/semaine">1/semaine</option>
+                        <option value="Continue">Continue</option>
                       </select>
                     </div>
+
+                    {(finalFormationName && (!isTiaSelected || resFormState.niveau_tia)) && (
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Session disponible *</label>
+                        <select value={resFormState.session_id} onChange={e => setResFormState({...resFormState, session_id: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                          <option value="" disabled>Sélectionnez une session</option>
+                          {availableSessionsForRes.map(s => (
+                            <option key={s.id} value={s.id} disabled={s.overlap}>
+                              {new Date(s.date_debut).toLocaleDateString("fr-FR")} ➔ {new Date(s.date_fin).toLocaleDateString("fr-FR")} 
+                              {s.overlap ? ' [Impossible : Chevauchement de dates]' : ` (${s.inscrits}/${s.places} inscrits)`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
-                  {resApiState === 'error' && <div style={{ marginTop: 16, color: C.danger, fontSize: 13, fontWeight: 600 }}>Erreur. Vous avez probablement déjà réservé ou suivi cette formation.</div>}
-                  {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>Réservation confirmée ! Redirection...</div>}
+                  {resApiState === 'error' && <div style={{ marginTop: 16, color: C.danger, fontSize: 13, fontWeight: 600 }}>Erreur inattendue. Veuillez réessayer.</div>}
+                  {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>Réservation confirmée avec succès ! Redirection...</div>}
 
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 32 }}>
                     <button onClick={() => setShowResModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: "transparent", color: C.textMuted, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
-                    <button disabled={!resFormState.formation || resApiState === 'loading' || resApiState === 'success'} onClick={handleReserveSubmit} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                    <button 
+                      disabled={!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || !resFormState.session_id || resApiState === 'loading' || resApiState === 'success'} 
+                      onClick={handleReserveSubmit} 
+                      style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer", opacity: (!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || !resFormState.session_id) ? 0.5 : 1 }}
+                    >
                       {resApiState === 'loading' ? 'Envoi...' : 'Confirmer'}
                     </button>
                   </div>

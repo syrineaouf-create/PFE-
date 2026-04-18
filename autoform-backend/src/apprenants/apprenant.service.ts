@@ -93,6 +93,7 @@ export class ApprenantsService {
           const nouvelleReservation = {
              formation: apprenantData.formation,
              mode_formation: apprenantData.mode_formation,
+             session_id: apprenantData.session_id || null,
              profil_candidat: apprenantData.profil_candidat,
              date_demande: new Date().toISOString()
           };
