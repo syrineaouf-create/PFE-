@@ -218,14 +218,12 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
           <div style={{ display: "flex", gap: 12 }}>
               <StatusBadge label={me.paiement || "En attente"} />
               <StatusBadge label={me.statut || "En cours"} />
-              {me.statut === "Certifié" && (
-                <button 
-                  onClick={() => window.open('/', '_blank')} 
-                  style={{ padding: "8px 16px", borderRadius: 30, background: C.accent, color: "#fff", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
-                >
-                  <BookOpen size={16}/> S'inscrire à un nouveau cours
-                </button>
-              )}
+              <button 
+                onClick={() => window.open('/', '_blank')} 
+                style={{ padding: "8px 16px", borderRadius: 30, background: C.accent, color: "#fff", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
+              >
+                <BookOpen size={16}/> {me.statut === "Certifié" ? "S'inscrire à un cours" : "Réserver une place"}
+              </button>
             </div>
         </div>
 
@@ -333,6 +331,25 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             )}
           </Card>
         </div>
+
+        {/* Panier de Réservations (Waitlist) */}
+        {me.reservations_futures && me.reservations_futures.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <SectionTitle>Mes Réservations (Pré-inscriptions)</SectionTitle>
+            <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 10 }}>
+              {me.reservations_futures.map((res, idx) => (
+                <div key={idx} style={{ minWidth: 260, flexShrink: 0, padding: 20, background: C.white, borderRadius: 16, border: `1px solid ${C.warning}40`, borderTop: `4px solid ${C.warning}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.warning, textTransform: "uppercase", marginBottom: 8, display: "flex", gap: 6, alignItems: "center" }}>
+                    <Hourglass size={14}/> En file d'attente
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.navy, marginBottom: 4 }}>{res.formation}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>Mode: {res.mode_formation}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 12 }}>Demandée le: {new Date(res.date_demande).toLocaleDateString("fr-FR")}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </>
     );
   }

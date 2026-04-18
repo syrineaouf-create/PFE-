@@ -64,13 +64,31 @@ export class SessionsService {
 
   async findAll(): Promise<{ data: Session[]; total: number }> {
     const data = await this.repo.find({ order: { date_debut: 'ASC' } });
+    const today = new Date().toISOString().split('T')[0];
 
-    // Recalculer le vrai nombre d'inscrits depuis la table apprenants
+    // Recalculer le vrai nombre d'inscrits + Auto-clôture des sessions périmées
     for (const session of data) {
+      let needsSave = false;
       const realCount = await this.apprenantRepo.count({ where: { session_id: session.id } });
       if (session.inscrits !== realCount) {
         session.inscrits = realCount;
-        await this.repo.save(session); // corriger le compteur en base
+        needsSave = true;
+      }
+
+      // Auto-clôture
+      if (session.date_fin < today && (session.statut === 'Planifiée' || session.statut === 'En cours')) {
+        session.statut = 'Terminée';
+        needsSave = true;
+      }
+
+      // Auto-démarrage
+      if (session.date_debut <= today && session.date_fin >= today && session.statut === 'Planifiée') {
+        session.statut = 'En cours';
+        needsSave = true;
+      }
+
+      if (needsSave) {
+        await this.repo.save(session);
       }
     }
 

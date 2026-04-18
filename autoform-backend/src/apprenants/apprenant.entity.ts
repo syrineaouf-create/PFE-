@@ -86,4 +86,7 @@ export class Apprenant {
 
   @Column({ type: 'simple-json', nullable: true })
   historique_formations: any[];
+
+  @Column({ type: 'simple-json', nullable: true })
+  reservations_futures: any[];
 }

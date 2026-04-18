@@ -81,7 +81,25 @@ export class ApprenantsService {
           }
           return saved;
         } else {
-          throw new BadRequestException('Vous avez déjà une formation en cours. Terminez-la avant de vous inscrire à une autre.');
+          // Mode Waitlist / Réservation : Ajout au panier des pré-inscriptions
+          if (existing.formation === apprenantData.formation) {
+            throw new BadRequestException('Vous êtes déjà inscrit et actif dans cette formation.');
+          }
+          const dejaReserve = existing.reservations_futures?.find(r => r.formation === apprenantData.formation);
+          if (dejaReserve) {
+            throw new BadRequestException('Vous avez déjà réservé une place pour cette formation.');
+          }
+
+          const nouvelleReservation = {
+             formation: apprenantData.formation,
+             mode_formation: apprenantData.mode_formation,
+             profil_candidat: apprenantData.profil_candidat,
+             date_demande: new Date().toISOString()
+          };
+
+          existing.reservations_futures = [...(existing.reservations_futures || []), nouvelleReservation];
+          const saved = await this.repo.save(existing);
+          return saved;
         }
       }
 

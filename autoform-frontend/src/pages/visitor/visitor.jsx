@@ -53,23 +53,30 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
 
 
   useEffect(() => {
-    // Récupérer uniquement les formations "Active"
-    api.get('/formations')
-      .then(res => {
-        const data = res.data.data || res.data || [];
-        setFormations(data.filter(f => f.statut === 'Active'));
+    Promise.all([
+      api.get('/formations'),
+      api.get('/sessions')
+    ])
+      .then(([resF, resS]) => {
+        const allF = resF.data.data || resF.data || [];
+        const allS = resS.data.data || resS.data || [];
+
+        // L'API backend gère l'auto-clôture. On garde les sessions valides.
+        const validSessions = allS.filter(s => s.statut !== 'Annulée' && s.statut !== 'Terminée');
+        setAllSessions(validSessions);
+
+        // On ne garde que les formations Actives QUI ONT au moins une session ouverte
+        const formationsWithSessions = allF.filter(f => 
+          f.statut === 'Active' && validSessions.some(vs => vs.formation === f.titre)
+        );
+        
+        setFormations(formationsWithSessions);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-
-    // Récupérer toutes les sessions disponibles
-    api.get('/sessions')
-      .then(res => {
-        const data = res.data.data || res.data || [];
-        // Garder uniquement les sessions Planifiées ou En cours avec des places disponibles
-        setAllSessions(data.filter(s => s.statut !== 'Annulée' && s.statut !== 'Terminée'));
-      })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Erreur chargement catalogue", err);
+        setLoading(false);
+      });
   }, []);
 
   // Quand la formation change, filtrer les sessions correspondantes
