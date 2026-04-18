@@ -1,0 +1,110 @@
+﻿/* ── Reset & Viewport ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: auto;          /* restore native page-level scrollbars */
+  background: #f4f6fb;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1a2340;
+}
+
+/* ── Page wrapper (all portals use this pattern) ────────── */
+.portal-root {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Scrollable content zone ────────────────────────────── */
+.portal-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.portal-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.portal-sidebar {
+  height: 100vh;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide the dev simulateur section */
+.sidebar-simulateur {
+  display: none !important;
+}
+
+/* ── Tab transition animation ───────────────────────────── */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content {
+  animation: fadeSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Sidebar nav button ──────────────────────────────────── */
+.nav-btn {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ── Scrollbar styling ───────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e40af55; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #1e40afaa; }
+
+/* ── Typography helpers ──────────────────────────────────── */
+h1, h2, h3 { line-height: 1.2; }
+
+/* ── Button global reset (avoid Vite defaults) ───────────── */
+button {
+  border-radius: 0;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+button:focus, button:focus-visible { outline: none; }
+
+a { text-decoration: none; color: inherit; }
