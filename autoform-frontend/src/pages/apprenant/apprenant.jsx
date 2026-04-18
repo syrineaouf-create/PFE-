@@ -100,44 +100,6 @@ function ScorePill({ label, value, color = C.info }) {
       </div>
       <div style={{ height: 6, background: `${color}20`, borderRadius: 99, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pctBar}%`, background: color, borderRadius: 99, transition: "width 1s ease" }} />
-        {/* Modal Interne de Réservation SaaS */}
-        {showResModal && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,28,63,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
-            <div style={{ background: C.white, width: 440, maxWidth: "90%", borderRadius: 20, padding: 32, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
-              <h2 style={{ fontFamily: "'Cormorant Garamond',serif", color: C.navy, margin: "0 0 16px 0", fontSize: 24 }}>Réserver une place</h2>
-              <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 24 }}>Choisissez votre prochaine aventure. Votre demande sera examinée par l'administration.</p>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Formation souhaitée</label>
-                  <select value={resFormState.formation} onChange={e => setResFormState({...resFormState, formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
-                    <option value="" disabled>Sélectionnez une formation</option>
-                    {resFormations.map(f => <option key={f.id} value={f.titre}>{f.titre}</option>)}
-                  </select>
-                </div>
-                
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Mode de participation</label>
-                  <select value={resFormState.mode_formation} onChange={e => setResFormState({...resFormState, mode_formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
-                    <option value="Présentiel">Présentiel</option>
-                    <option value="Ligne">En ligne</option>
-                    <option value="Mixte">Mixte</option>
-                  </select>
-                </div>
-              </div>
-
-              {resApiState === 'error' && <div style={{ marginTop: 16, color: C.danger, fontSize: 13, fontWeight: 600 }}>Erreur. Vous avez probablement déjà réservé ou suivi cette formation.</div>}
-              {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>Réservation confirmée ! Mise à jour...</div>}
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 32 }}>
-                <button onClick={() => setShowResModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: "transparent", color: C.textMuted, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
-                <button disabled={!resFormState.formation || resApiState === 'loading' || resApiState === 'success'} onClick={handleReserveSubmit} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer" }}>
-                  {resApiState === 'loading' ? 'Envoi...' : 'Confirmer'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -892,6 +854,45 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
               {activeTab === "sessions"  && <TabSessions />}
               {activeTab === "resultats" && <TabResultats />}
             </div>
+            
+            {/* Modal Interne de Réservation SaaS */}
+            {showResModal && (
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,28,63,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(4px)" }}>
+                <div style={{ background: C.white, width: 440, maxWidth: "90%", borderRadius: 20, padding: 32, boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
+                  <h2 style={{ fontFamily: "'Cormorant Garamond',serif", color: C.navy, margin: "0 0 16px 0", fontSize: 24 }}>Réserver une place</h2>
+                  <p style={{ color: C.textMuted, fontSize: 13, marginBottom: 24 }}>Choisissez votre prochaine aventure. Votre demande sera examinée par l'administration.</p>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Formation souhaitée</label>
+                      <select value={resFormState.formation} onChange={e => setResFormState({...resFormState, formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                        <option value="" disabled>Sélectionnez une formation</option>
+                        {resFormations.map(f => <option key={f.id} value={f.titre}>{f.titre}</option>)}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Mode de participation</label>
+                      <select value={resFormState.mode_formation} onChange={e => setResFormState({...resFormState, mode_formation: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                        <option value="Présentiel">Présentiel</option>
+                        <option value="Ligne">En ligne</option>
+                        <option value="Mixte">Mixte</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {resApiState === 'error' && <div style={{ marginTop: 16, color: C.danger, fontSize: 13, fontWeight: 600 }}>Erreur. Vous avez probablement déjà réservé ou suivi cette formation.</div>}
+                  {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>Réservation confirmée ! Redirection...</div>}
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 32 }}>
+                    <button onClick={() => setShowResModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: "transparent", color: C.textMuted, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
+                    <button disabled={!resFormState.formation || resApiState === 'loading' || resApiState === 'success'} onClick={handleReserveSubmit} style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+                      {resApiState === 'loading' ? 'Envoi...' : 'Confirmer'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>
