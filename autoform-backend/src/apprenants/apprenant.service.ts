@@ -328,10 +328,30 @@ export class ApprenantsService {
       throw new HttpException('Email ou mot de passe incorrect', HttpStatus.UNAUTHORIZED);
     }
 
-    // Vérification compte actif
+    // Désactivation automatique après 60 jours de la date de début de la session
+    if (apprenant.compte_actif && apprenant.session_id) {
+      const session = await this.sessionRepo.findOne({ where: { id: apprenant.session_id } });
+      if (session && session.date_debut) {
+        const startDate = new Date(session.date_debut);
+        const expirationDate = new Date(startDate.getTime() + 60 * 24 * 3600 * 1000);
+        
+        if (new Date() > expirationDate) {
+          if (!apprenant.date_activation || new Date(apprenant.date_activation) <= expirationDate) {
+            apprenant.compte_actif = false;
+            await this.repo.save(apprenant);
+            throw new HttpException(
+              "Votre compte a été désactivé automatiquement. Veuillez attendre que l'administration réactive votre compte.",
+              HttpStatus.FORBIDDEN
+            );
+          }
+        }
+      }
+    }
+
+    // Vérification compte actif standard
     if (!apprenant.compte_actif) {
       throw new HttpException(
-        'Votre compte est en attente de validation par l\'administration. Vous serez notifié(e) par email.',
+        "Votre compte est désactivé ou en attente de validation par l'administration. Vous serez notifié(e) par email lors de sa (ré)activation.",
         HttpStatus.FORBIDDEN,
       );
     }
