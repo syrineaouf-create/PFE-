@@ -62,7 +62,16 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
         const allS = resS.data.data || resS.data || [];
 
         // L'API backend gère l'auto-clôture. On garde les sessions valides.
-        const validSessions = allS.filter(s => s.statut !== 'Annulée' && s.statut !== 'Terminée');
+        const validSessions = allS.filter(s => {
+           if (s.statut === 'Annulée' || s.statut === 'Terminée') return false;
+           // Hide if session start date is in the past
+           if (s.date_debut) {
+              const start = new Date(s.date_debut).setHours(0,0,0,0);
+              const today = new Date().setHours(0,0,0,0);
+              if (start < today) return false;
+           }
+           return true;
+        });
         setAllSessions(validSessions);
 
         // On affiche TOUTES les formations Actives pour permettre le Waitlisting (Alertes E-mail)

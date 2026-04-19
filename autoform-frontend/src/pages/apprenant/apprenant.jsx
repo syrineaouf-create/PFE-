@@ -284,10 +284,18 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       });
   }
 
-  const availableSessionsForRes = sessions.filter(s => 
-      (s.statut === "Planifiée" || s.statut === "En cours") && 
-      (s.formation === finalFormationName || s.formation === resFormState.formation)
-  ).map(s => {
+  const availableSessionsForRes = sessions.filter(s => {
+      if (s.statut !== "Planifiée" && s.statut !== "En cours") return false;
+      if (s.formation !== finalFormationName && s.formation !== resFormState.formation) return false;
+      
+      // Strict Check: hide if session start date is already deep in the past
+      if (s.date_debut) {
+          const start = new Date(s.date_debut).setHours(0,0,0,0);
+          const today = new Date().setHours(0,0,0,0);
+          if (start < today) return false; // Past session, block registration
+      }
+      return true;
+  }).map(s => {
       let overlap = false;
       if (s.date_debut && s.date_fin) {
           const sSt = new Date(s.date_debut);
