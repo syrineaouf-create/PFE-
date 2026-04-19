@@ -108,7 +108,7 @@ export class SessionsService {
 
   async findAll(): Promise<{ data: Session[]; total: number }> {
     const data = await this.repo.find({ order: { date_debut: 'ASC' } });
-    const today = new Date().toISOString().split('T')[0];
+    const todayNum = new Date().setHours(0,0,0,0);
 
     // Recalculer le vrai nombre d'inscrits + Auto-clôture des sessions périmées
     for (const session of data) {
@@ -119,16 +119,21 @@ export class SessionsService {
         needsSave = true;
       }
 
-      // Auto-clôture
-      if (session.date_fin < today && (session.statut === 'Planifiée' || session.statut === 'En cours')) {
-        session.statut = 'Terminée';
-        needsSave = true;
-      }
+      if (session.date_debut && session.date_fin) {
+          const startNum = new Date(session.date_debut).setHours(0,0,0,0);
+          const endNum = new Date(session.date_fin).setHours(0,0,0,0);
 
-      // Auto-démarrage
-      if (session.date_debut <= today && session.date_fin >= today && session.statut === 'Planifiée') {
-        session.statut = 'En cours';
-        needsSave = true;
+          // Auto-clôture
+          if (endNum < todayNum && (session.statut === 'Planifiée' || session.statut === 'En cours')) {
+            session.statut = 'Terminée';
+            needsSave = true;
+          }
+
+          // Auto-démarrage
+          if (startNum <= todayNum && endNum >= todayNum && session.statut === 'Planifiée') {
+            session.statut = 'En cours';
+            needsSave = true;
+          }
       }
 
       if (needsSave) {
