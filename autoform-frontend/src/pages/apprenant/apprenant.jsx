@@ -506,17 +506,26 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
           <div style={{ marginTop: 24 }}>
             <SectionTitle>Mes Réservations (Pré-inscriptions)</SectionTitle>
             <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 10 }}>
-              {me.reservations_futures.map((res, idx) => (
-                <div key={idx} style={{ minWidth: 260, flexShrink: 0, padding: 20, background: C.white, borderRadius: 16, border: `1px solid ${C.warning}40`, borderTop: `4px solid ${C.warning}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.warning, textTransform: "uppercase", marginBottom: 8, display: "flex", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
-                    <span style={{ display: "flex", gap: 6, alignItems: "center" }}><Hourglass size={14}/> En file d'attente</span>
-                    <button onClick={() => deleteReservation(idx)} style={{ cursor: "pointer", background: "transparent", border: "none", color: C.danger, fontWeight: 700, fontSize: 11, textDecoration: "underline", padding: 0 }}>Annuler</button>
+              {me.reservations_futures.map((res, idx) => {
+                const isConfirmed = res.statut === "Confirmé";
+                const color = isConfirmed ? C.success : C.warning;
+                return (
+                  <div key={idx} style={{ minWidth: 260, flexShrink: 0, padding: 20, background: C.white, borderRadius: 16, border: `1px solid ${color}40`, borderTop: `4px solid ${color}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: color, textTransform: "uppercase", marginBottom: 8, display: "flex", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        {isConfirmed ? <CheckCircle2 size={14}/> : <Hourglass size={14}/>} 
+                        {isConfirmed ? "Session Confirmée" : "En file d'attente"}
+                      </span>
+                      {!isConfirmed && (
+                        <button onClick={() => deleteReservation(idx)} style={{ cursor: "pointer", background: "transparent", border: "none", color: C.danger, fontWeight: 700, fontSize: 11, textDecoration: "underline", padding: 0 }}>Annuler</button>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: C.navy, marginBottom: 4 }}>{res.formation}</div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>Mode: {res.mode_formation}</div>
+                    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 12 }}>Demandée le: {new Date(res.date_demande || res.date || new Date()).toLocaleDateString("fr-FR")}</div>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: C.navy, marginBottom: 4 }}>{res.formation}</div>
-                  <div style={{ fontSize: 12, color: C.textMuted }}>Mode: {res.mode_formation}</div>
-                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 12 }}>Demandée le: {new Date(res.date_demande).toLocaleDateString("fr-FR")}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

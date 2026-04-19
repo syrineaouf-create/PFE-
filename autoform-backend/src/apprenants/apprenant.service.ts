@@ -392,13 +392,28 @@ export class ApprenantsService {
     const apprenant = await this.findOne(id);
     const session = await this.sessionRepo.findOne({ where: { id: payload.session_id } });
 
-    apprenant.session_id = payload.session_id;
-    apprenant.formation = payload.formation;
-    apprenant.statut = "En attente";
-    apprenant.date_inscription = new Date().toISOString().split('T')[0];
-    
+    // Nettoyage de la file d'attente via le payload frontend
     if (payload.reservations_futures) {
       apprenant.reservations_futures = payload.reservations_futures;
+    }
+
+    if (apprenant.session_id && apprenant.session_id !== payload.session_id) {
+       // Si l'apprenant a DÉJÀ une formation en cours, on ne l'écrase pas.
+       // On enregistre la nouvelle session officielle dans ses réservations validées.
+       const futures = apprenant.reservations_futures || [];
+       futures.push({
+         formation: payload.formation,
+         session_id: payload.session_id,
+         statut: "Confirmé",
+         date: new Date().toISOString().split('T')[0]
+       });
+       apprenant.reservations_futures = futures;
+    } else {
+       // Affectation primaire classique
+       apprenant.session_id = payload.session_id;
+       apprenant.formation = payload.formation;
+       apprenant.statut = "En attente";
+       apprenant.date_inscription = new Date().toISOString().split('T')[0];
     }
 
     const saved = await this.repo.save(apprenant);
