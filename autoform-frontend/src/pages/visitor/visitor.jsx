@@ -117,6 +117,8 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
 
     api.post('/apprenants', {
       ...form,
+      email: form.email.trim(),
+      mot_de_passe: form.mot_de_passe.trim(),
       formation: finalFormation,
       age: form.age ? parseInt(form.age) : null,
       session_id: form.session_id ? parseInt(form.session_id) : null,

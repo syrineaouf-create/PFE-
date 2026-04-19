@@ -49,7 +49,7 @@ export default function LoginPage({ onLogin, onBack, onGoToRegister, forcedRole 
           ? "/admins/login"
           : "/formateurs/login";
 
-      const res = await api.post(endpoint, { email, mot_de_passe: mdp });
+      const res = await api.post(endpoint, { email: email.trim(), mot_de_passe: mdp });
       const userData = res.data?.data || res.data;
       
       // Injecter le token dans le userData stocké pour l'intercepteur API
@@ -98,7 +98,7 @@ export default function LoginPage({ onLogin, onBack, onGoToRegister, forcedRole 
           ? "/admins/forgot-password"
           : "/formateurs/forgot-password";
 
-      const res = await api.post(endpoint, { email });
+      const res = await api.post(endpoint, { email: email.trim() });
       setForgotMsg(res.data?.message || "Un e-mail de réinitialisation a été envoyé.");
     } catch (err) {
       setError(err.response?.data?.message || "Erreur lors de la réinitialisation.");
