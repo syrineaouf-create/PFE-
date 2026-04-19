@@ -1244,13 +1244,13 @@ export default function FormateurPortal({ onGoToLogin }) {
   ══════════════════════════════════════════════════════════════ */
   const renderTab = () => {
     switch (activeTab) {
-      case "dashboard": return <TabDashboard />;
-      case "compte": return <TabCompte />;
-      case "historique": return <TabHistorique />;
-      case "cours": return <TabCours />;
-      case "suivi": return <TabSuivi />;
-      case "apprenants": return <TabApprenants />;
-      default: return <TabDashboard />;
+      case "dashboard": return TabDashboard();
+      case "compte": return TabCompte();
+      case "historique": return TabHistorique();
+      case "cours": return TabCours();
+      case "suivi": return TabSuivi();
+      case "apprenants": return TabApprenants();
+      default: return TabDashboard();
     }
   };
 
