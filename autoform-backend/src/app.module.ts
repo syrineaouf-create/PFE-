@@ -10,7 +10,6 @@ import { Apprenant } from './apprenants/apprenant.entity';
 import { Formateur } from './formateurs/formateur.entity';
 import { Formation } from './formations/formation.entity';
 import { Session } from './sessions/session.entity';
-import { Message } from './messages/message.entity';
 import { Admin } from './admins/admin.entity';
 import { Cours } from './cours/cours.entity';
 
@@ -20,7 +19,6 @@ import { FormationsModule } from './formations/formation.module';
 import { SessionsModule } from './sessions/session.module';
 import { CsvImportModule } from './csv-import/csv.import.module';
 import { ChatModule } from './chat/chat.module';
-import { MessagesModule } from './messages/message.module';
 import { AdminsModule } from './admins/admin.module';
 import { CoursModule } from './cours/cours.module';
 import { AuthModule } from './auth/auth.module';
@@ -37,7 +35,7 @@ import * as bcrypt from 'bcrypt';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'plateform_db',
-      entities: [Apprenant, Formateur, Formation, Session, Message, Admin, Cours],
+      entities: [Apprenant, Formateur, Formation, Session, Admin, Cours],
       synchronize: true,
     }),
 
@@ -47,7 +45,6 @@ import * as bcrypt from 'bcrypt';
     SessionsModule,
     CsvImportModule,
     ChatModule,
-    MessagesModule,
     AdminsModule,
     CoursModule,
     AuthModule,
