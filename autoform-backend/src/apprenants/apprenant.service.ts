@@ -360,4 +360,27 @@ export class ApprenantsService {
 
     return { message: 'Votre mot de passe a bien été réinitialisé.' };
   }
+
+  // ── CONFIRMER SESSION (Depuis Apprenant UI) ──
+  async confirmSession(id: number, payload: any): Promise<Apprenant> {
+    const apprenant = await this.findOne(id);
+    const session = await this.sessionRepo.findOne({ where: { id: payload.session_id } });
+
+    apprenant.session_id = payload.session_id;
+    apprenant.formation = payload.formation;
+    apprenant.statut = "En attente";
+    apprenant.date_inscription = new Date().toISOString().split('T')[0];
+    
+    if (payload.reservations_futures) {
+      apprenant.reservations_futures = payload.reservations_futures;
+    }
+
+    const saved = await this.repo.save(apprenant);
+
+    if (session && apprenant.email) {
+      await this.emailService.sendSessionConfirmationEmail(apprenant, session).catch(err => console.error("Email err:", err));
+    }
+    
+    return saved;
+  }
 }

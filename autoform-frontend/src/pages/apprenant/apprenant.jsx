@@ -346,13 +346,12 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       // On retire la réservation qui a déclenché l'alerte
       const newRes = (me.reservations_futures || []).filter(r => r.formation !== sessionObj.formation);
       
-      api.put(`/apprenants/${me.id}`, { 
+      api.patch(`/apprenants/${me.id}/confirm-session`, { 
         session_id: sessionObj.id, 
         formation: sessionObj.formation || me.formation, 
-        statut: "En attente", 
         reservations_futures: newRes 
       }).then(() => {
-        alert("Inscription confirmée ! L'administration a été notifiée.");
+        alert("Inscription confirmée ! Un email récapitulatif vous a été envoyé. Veuillez finaliser votre paiement au centre.");
         window.location.reload();
       }).catch(err => alert("Erreur système lors de l'inscription."));
     };

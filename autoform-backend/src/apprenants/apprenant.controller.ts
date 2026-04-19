@@ -107,4 +107,14 @@ export class ApprenantsController {
   resetPassword(@Body() body: { token: string; nouveau_mdp: string }) {
     return this.service.resetPassword(body.token, body.nouveau_mdp);
   }
+
+  // PATCH /apprenants/:id/confirm-session
+  @Patch(':id/confirm-session')
+  @UseGuards(JwtAuthGuard)
+  confirmSession(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() payload: { session_id: number; formation: string; reservations_futures: any[] }
+  ) {
+    return this.service.confirmSession(id, payload);
+  }
 }

@@ -354,4 +354,38 @@ export class EmailService {
       }
     }
   }
+
+  // ===================================================================================================
+  // Confirmation d'inscription (S'inscrire depuis Waitlist)
+  // ===================================================================================================
+  async sendSessionConfirmationEmail(apprenant: any, session: any): Promise<void> {
+    const subject = "Confirmation de Pré-inscription : " + session.formation;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #0f1c3f;">
+         <h2>Bonjour ${apprenant.prenom || apprenant.nom},</h2>
+         <p>Votre demande d'inscription pour la session de <strong>${session.formation}</strong> a bien été prise en compte !</p>
+         <div style="background: #eef2ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <strong>Détails de la Session :</strong><br/>
+            📍 Du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}
+         </div>
+         <p><strong>Prochaine étape :</strong> Pour finaliser et réserver officiellement votre place, veuillez vous présenter au centre pour valider votre paiement.</p>
+         <p>À très bientôt chez Waialys !</p>
+      </div>
+    `;
+
+    if (this.transporter) {
+      try {
+        await this.transporter.sendMail({
+          from: process.env.MAIL_FROM || '"Waialys Formation" <contact@waialys.tn>',
+          to: apprenant.email,
+          subject,
+          html,
+        });
+        this.logger.log("Email de confirmation envoyee a " + apprenant.email);
+      } catch (err) {
+        this.logger.error("Erreur envoi email de confirmation a " + apprenant.email);
+      }
+    }
+  }
 }
+
