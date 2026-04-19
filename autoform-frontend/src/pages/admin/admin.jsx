@@ -66,6 +66,9 @@ function PageHeader({ title, subtitle, action }) {
 }
 
 function Table({ columns, rows }) {
+  const [limit, setLimit] = useState(30);
+  const visibleRows = rows.slice(0, limit);
+
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "'DM Sans',sans-serif" }}>
@@ -75,13 +78,23 @@ function Table({ columns, rows }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
+          {visibleRows.map((row, i) => (
             <tr key={i} style={{ borderBottom: `1px solid ${C.border}` }} onMouseEnter={e => e.currentTarget.style.background = "#f8f9fd"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
               {columns.map(c => <td key={c.key} style={{ padding: "13px 14px", fontSize: 13, color: C.text, verticalAlign: "middle" }}>{c.render ? c.render(row) : row[c.key]}</td>)}
             </tr>
           ))}
         </tbody>
       </table>
+      {limit < rows.length && (
+        <div style={{ textAlign: "center", padding: "16px 0", borderTop: `1px solid ${C.border}` }}>
+          <button onClick={() => setLimit(l => l + 50)} style={{
+            padding: "8px 24px", borderRadius: 20, border: `1px solid ${C.border}`,
+            background: C.white, color: C.navy, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+          }} onMouseEnter={e => e.currentTarget.style.background = "#f8f9fd"} onMouseLeave={e => e.currentTarget.style.background = C.white}>
+            Voir plus ({rows.length - limit} masqués)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1448,8 +1461,9 @@ function InscriptionsPage() {
 
 // ─── PAGE : DEMANDES EN ATTENTE ──────────────────────────────
 
-function PendingPage({ onCountChange}) {
+function PendingPage({ onCountChange }) {
   const [list, setList] = useState([]);
+  const [limit, setLimit] = useState(30);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
@@ -1509,7 +1523,7 @@ function PendingPage({ onCountChange}) {
         </Card>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {list.map(a => {
+          {list.slice(0, limit).map(a => {
             const nom = `${a.prenom || ''} ${a.nom || ''}`.trim() || 'Sans nom';
             const initials = nom.split(' ').map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '?';
             const isActLoading = actionLoading === a.id + '_activate';
@@ -1611,6 +1625,16 @@ function PendingPage({ onCountChange}) {
               </div>
             );
           })}
+          {limit < list.length && (
+            <div style={{ textAlign: "center", padding: "16px 0" }}>
+              <button onClick={() => setLimit(l => l + 50)} style={{
+                padding: "8px 24px", borderRadius: 20, border: `1px solid ${C.border}`,
+                background: C.white, color: C.navy, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+              }} onMouseEnter={e => e.currentTarget.style.background = "#f8f9fd"} onMouseLeave={e => e.currentTarget.style.background = C.white}>
+                Voir plus ({list.length - limit} masqués)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
