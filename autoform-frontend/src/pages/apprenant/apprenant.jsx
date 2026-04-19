@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api";
-import { LayoutDashboard, BookOpen, Calendar, GraduationCap, CheckCircle2, Hourglass, XCircle, User, LogOut, Mail, Phone, UserCircle, Briefcase, Building2, CreditCard } from "lucide-react";
+import { LayoutDashboard, BookOpen, Calendar, GraduationCap, CheckCircle2, Hourglass, XCircle, User, LogOut, Mail, Phone, UserCircle, Briefcase, Building2, CreditCard, Settings } from "lucide-react";
 
 /* ── Design tokens ─────────────────────────────────────── */
 const C = {
@@ -29,10 +29,14 @@ const pct = (v) => (v == null ? "—" : v + "%");
 /* ── Nav ────────────────────────────────────────────────── */
 const NAV = [
   { id: "dashboard", label: "Vue d'ensemble",         icon: <LayoutDashboard size={18} /> },
-  { id: "formation", label: "Mon Historique",          icon: <GraduationCap size={18} /> },
-  { id: "cours",     label: "Mes Cours",               icon: <BookOpen size={18} /> },
-  { id: "sessions",  label: "Mes Sessions",            icon: <Calendar size={18} /> },
+  { id: "formation", label: "Mon Historique",         icon: <GraduationCap size={18} /> },
+  { id: "cours",     label: "Mes Cours",              icon: <BookOpen size={18} /> },
+  { id: "sessions",  label: "Mes Sessions",           icon: <Calendar size={18} /> },
   { id: "resultats", label: "Résultats & Certificats", icon: <CheckCircle2 size={18} /> },
+];
+
+const NAV_BOTTOM = [
+  { id: "parametres", label: "Paramètres du Profil",  icon: <Settings size={18} /> }
 ];
 
 /* ── Small components ───────────────────────────────────── */
@@ -869,6 +873,70 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
     );
   }
 
+  function TabParametres() {
+    const [formData, setFormData] = useState({
+      prenom: me.prenom || "",
+      nom: me.nom || "",
+      telephone: me.telephone || "",
+      mot_de_passe: ""
+    });
+
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    const handleSave = (e) => {
+      e.preventDefault();
+      const payload = { ...formData };
+      if (!payload.mot_de_passe) delete payload.mot_de_passe;
+
+      api.put(`/apprenants/${me.id}`, payload).then(res => {
+        alert("Profil mis à jour avec succès !");
+        localStorage.setItem("apprenant_session", JSON.stringify({ ...me, ...formData }));
+        window.location.reload();
+      }).catch(err => {
+        alert("Erreur lors de la mise à jour");
+      });
+    };
+
+    return (
+      <Card>
+        <SectionTitle>Paramètres du Profil</SectionTitle>
+        <div style={{ maxWidth: 600 }}>
+          <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Adresse E-mail (Non modifiable)</label>
+              <input type="text" value={me.email} disabled style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, background: "#f0f2f8", color: C.textMuted, cursor: "not-allowed" }} />
+            </div>
+
+            <div style={{ display: "flex", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Prénom</label>
+                <input type="text" name="prenom" value={formData.prenom} onChange={handleChange} required style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Nom</label>
+                <input type="text" name="nom" value={formData.nom} onChange={handleChange} required style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+              </div>
+            </div>
+
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Téléphone</label>
+              <input type="text" name="telephone" value={formData.telephone} onChange={handleChange} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+            </div>
+
+            <div>
+              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
+              <input type="password" name="mot_de_passe" value={formData.mot_de_passe} onChange={handleChange} placeholder="••••••••" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+            </div>
+
+            <button type="submit" style={{ marginTop: 10, padding: "14px", borderRadius: 8, background: C.accent, color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              Enregistrer les modifications
+            </button>
+          </form>
+        </div>
+      </Card>
+    );
+  }
+
   /* ── Render ── */
   return (
     <>
@@ -910,6 +978,33 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
               Espace Étudiant
             </div>
             {NAV.filter(item => isSessionFinished || item.id !== "resultats").map(item => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  className="nav-btn"
+                  onClick={() => setActiveTab(item.id)}
+                  style={{
+                    width: "100%", textAlign: "left",
+                    padding: "11px 14px", margin: "3px 0",
+                    background: isActive ? "rgba(255,255,255,0.12)" : "transparent",
+                    borderLeft: isActive ? `3px solid #ffffff` : "3px solid transparent",
+                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.65)",
+                    border: "none", borderRadius: 10, cursor: "pointer",
+                    fontSize: 14, fontWeight: isActive ? 700 : 400,
+                    display: "flex", alignItems: "center", gap: 12,
+                    transition: "all 0.2s", whiteSpace: "nowrap"
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ padding: "16px 14px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {NAV_BOTTOM.map(item => {
               const isActive = activeTab === item.id;
               return (
                 <button
@@ -982,8 +1077,9 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
               {activeTab === "dashboard" && <TabDashboard />}
               {activeTab === "formation" && <TabFormation />}
               {activeTab === "cours"     && <TabCours />}
-              {activeTab === "sessions"  && <TabSessions />}
-              {activeTab === "resultats" && <TabResultats />}
+              {activeTab === "sessions"   && <TabSessions />}
+              {activeTab === "resultats"  && <TabResultats />}
+              {activeTab === "parametres" && <TabParametres />}
             </div>
             
             {/* Modal Interne de Réservation SaaS */}

@@ -192,6 +192,16 @@ export class ApprenantsService {
   // ── UPDATE ───────────────────────────────────────────────────
   async update(id: number, dto: UpdateApprenantDto): Promise<Apprenant> {
     const apprenant = await this.findOne(id);
+    
+    // Hash password if modified
+    if ((dto as any).mot_de_passe) {
+      if ((dto as any).mot_de_passe.trim() !== '') {
+        (dto as any).mot_de_passe = await bcrypt.hash((dto as any).mot_de_passe, 10);
+      } else {
+        delete (dto as any).mot_de_passe; // Prevent empty password updates
+      }
+    }
+
     Object.assign(apprenant, dto);
     return this.repo.save(apprenant);
   }
