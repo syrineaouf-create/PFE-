@@ -9,9 +9,19 @@ import AIAgent from './components/AIAgent';
 import { Globe, ShieldCheck, GraduationCap, Presentation } from 'lucide-react';
 
 function App() {
-  const [route, setRoute] = useState('visitor');
+  const [route, setRoute] = useState(() => {
+    // Restaurer la route si l'utilisateur rafraîchit la page (F5)
+    if (localStorage.getItem('apprenant_session')) return 'apprenant';
+    if (localStorage.getItem('admin_session')) return 'admin';
+    if (localStorage.getItem('formateur_session')) return 'formateur';
+    return localStorage.getItem('current_route') || 'visitor';
+  });
   const [loginRole, setLoginRole] = useState(null);
   const [resetTokenInfo, setResetTokenInfo] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('current_route', route);
+  }, [route]);
 
   useEffect(() => {
     // Check for token on startup
