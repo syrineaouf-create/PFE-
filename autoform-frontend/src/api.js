@@ -28,4 +28,24 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+// Intercepteur global pour déconnecter si le token JWT expire (401 Non Autorisé)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Si on reçoit 401 mais qu'on n'est PAS sur la route de login (sinon ça bloque les erreurs de mauvais mot de passe)
+    if (error.response && error.response.status === 401 && !error.config.url.includes('/login')) {
+      // Nettoyage des sessions expirées
+      localStorage.removeItem('apprenant_session');
+      localStorage.removeItem('admin_session');
+      localStorage.removeItem('formateur_session');
+      
+      // Forcer le rechargement vers l'écran de connexion si on n'y est pas déjà
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
