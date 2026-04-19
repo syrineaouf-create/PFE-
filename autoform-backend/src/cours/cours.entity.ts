@@ -14,11 +14,11 @@ export class Cours {
   @Column({ default: 'Autre' })
   type: string;
 
-  @Column({ nullable: true })
-  chemin_fichier: string;
+  @Column({ type: 'varchar', nullable: true })
+  chemin_fichier: string | null;
 
-  @Column({ nullable: true })
-  url: string;
+  @Column({ type: 'varchar', nullable: true })
+  url: string | null;
 
   @Column()
   ajoute_par: string;
