@@ -11,9 +11,9 @@ const api = axios.create({
 // Ajout du token JWT à chaque requête entrante
 api.interceptors.request.use((config) => {
   // Le token est stocké selon le rôle connecté
-  const apprenant = localStorage.getItem('apprenant_session');
-  const admin = localStorage.getItem('admin_session');
-  const formateur = localStorage.getItem('formateur_session');
+  const apprenant = sessionStorage.getItem('apprenant_session');
+  const admin = sessionStorage.getItem('admin_session');
+  const formateur = sessionStorage.getItem('formateur_session');
 
   let session = null;
   if (apprenant) session = JSON.parse(apprenant);
@@ -35,9 +35,9 @@ api.interceptors.response.use(
     // Si on reçoit 401 mais qu'on n'est PAS sur la route de login (sinon ça bloque les erreurs de mauvais mot de passe)
     if (error.response && error.response.status === 401 && !error.config.url.includes('/login')) {
       // Nettoyage des sessions expirées
-      localStorage.removeItem('apprenant_session');
-      localStorage.removeItem('admin_session');
-      localStorage.removeItem('formateur_session');
+      sessionStorage.removeItem('apprenant_session');
+      sessionStorage.removeItem('admin_session');
+      sessionStorage.removeItem('formateur_session');
       
       // Forcer le rechargement vers l'écran de connexion si on n'y est pas déjà
       if (window.location.pathname !== '/') {
