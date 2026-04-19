@@ -544,7 +544,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             <>
               {/* Hero formation */}
               <div style={{ background: `linear-gradient(135deg, ${C.navy}, ${C.navyLight})`, borderRadius: 16, padding: "28px 32px", marginBottom: 20, color: "#fff" }}>
-                <div style={{ fontSize: 11, color: C.accent, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700, marginBottom: 8 }}>Formation choisie</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 800, marginBottom: 8 }}>Formation choisie</div>
                 <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 700, marginBottom: 12 }}>{me.formation}</div>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <StatusBadge label={me.statut || "En cours"} />
