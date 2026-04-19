@@ -70,8 +70,13 @@ export class SessionsService {
     console.log(`[Smart Alert] Scan pour ${session.formation}...`);
     const allApprenants = await this.apprenantRepo.find();
     const targets = allApprenants.filter(a => {
-       if (!a.reservations_futures || !Array.isArray(a.reservations_futures)) return false;
-       return a.reservations_futures.some(r => r.formation === session.formation && !r.session_id);
+       // Cas 1 : Nouvel apprenant inscrit avec formation principale en attente
+       const inMain = a.formation === session.formation && !a.session_id;
+       // Cas 2 : Apprenant existant avec une pré-inscription dans le panier
+       const inFutures = Array.isArray(a.reservations_futures) 
+             && a.reservations_futures.some(r => r.formation === session.formation && !r.session_id);
+       
+       return inMain || inFutures;
     });
 
     if (targets.length === 0) {
