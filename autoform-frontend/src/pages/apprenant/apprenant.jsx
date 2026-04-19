@@ -329,6 +329,34 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
     const scoreTP  = me.score_tp != null ? Number(me.score_tp) : null;
     const scoreTH  = me.score_theorique != null ? Number(me.score_theorique) : null;
 
+    const deleteReservation = (idx) => {
+      if (!window.confirm("Voulez-vous vraiment annuler cette pré-inscription ?")) return;
+      const newRes = [...(me.reservations_futures || [])];
+      newRes.splice(idx, 1);
+      api.put(`/apprenants/${me.id}`, { reservations_futures: newRes }).then(() => {
+        const updated = { ...me, reservations_futures: newRes };
+        localStorage.setItem("apprenant_session", JSON.stringify(updated));
+        setMe(updated);
+      }).catch(err => alert("Erreur système lors de l'annulation."));
+    };
+
+    const confirmSession = (sessionObj) => {
+      if (!window.confirm(`Confirmer l'inscription à la session du ${new Date(sessionObj.date_debut).toLocaleDateString("fr-FR")} ?`)) return;
+      
+      // On retire la réservation qui a déclenché l'alerte
+      const newRes = (me.reservations_futures || []).filter(r => r.formation !== sessionObj.formation);
+      
+      api.put(`/apprenants/${me.id}`, { 
+        session_id: sessionObj.id, 
+        formation: sessionObj.formation || me.formation, 
+        statut: "En attente", 
+        reservations_futures: newRes 
+      }).then(() => {
+        alert("Inscription confirmée ! L'administration a été notifiée.");
+        window.location.reload();
+      }).catch(err => alert("Erreur système lors de l'inscription."));
+    };
+
     return (
       <>
         {/* Welcome banner */}
@@ -446,6 +474,14 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
                         {s.formation || me.formation}
                       </div>
                     </div>
+                    {!me.session_id && (
+                      <button 
+                        onClick={() => confirmSession(s)} 
+                        style={{ padding: "6px 14px", borderRadius: 8, background: C.success, color: "#fff", border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                      >
+                        S'inscrire
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -465,8 +501,9 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 10 }}>
               {me.reservations_futures.map((res, idx) => (
                 <div key={idx} style={{ minWidth: 260, flexShrink: 0, padding: 20, background: C.white, borderRadius: 16, border: `1px solid ${C.warning}40`, borderTop: `4px solid ${C.warning}` }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.warning, textTransform: "uppercase", marginBottom: 8, display: "flex", gap: 6, alignItems: "center" }}>
-                    <Hourglass size={14}/> En file d'attente
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.warning, textTransform: "uppercase", marginBottom: 8, display: "flex", gap: 6, alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ display: "flex", gap: 6, alignItems: "center" }}><Hourglass size={14}/> En file d'attente</span>
+                    <button onClick={() => deleteReservation(idx)} style={{ cursor: "pointer", background: "transparent", border: "none", color: C.danger, fontWeight: 700, fontSize: 11, textDecoration: "underline", padding: 0 }}>Annuler</button>
                   </div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: C.navy, marginBottom: 4 }}>{res.formation}</div>
                   <div style={{ fontSize: 12, color: C.textMuted }}>Mode: {res.mode_formation}</div>

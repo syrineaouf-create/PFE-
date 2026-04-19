@@ -78,8 +78,13 @@ export class CreateApprenantDto {
   paiement?: string;
 
   @IsOptional()
-  @IsString()
   mot_de_passe?: string;
+
+  @IsOptional()
+  reservations_futures?: any[];
+
+  @IsOptional()
+  historique_formations?: any[];
 
   @IsOptional()
   compte_actif?: boolean;
