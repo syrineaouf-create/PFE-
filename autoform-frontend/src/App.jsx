@@ -11,16 +11,16 @@ import { Globe, ShieldCheck, GraduationCap, Presentation } from 'lucide-react';
 function App() {
   const [route, setRoute] = useState(() => {
     // Restaurer la route si l'utilisateur rafraîchit la page (F5)
-    if (localStorage.getItem('apprenant_session')) return 'apprenant';
-    if (localStorage.getItem('admin_session')) return 'admin';
-    if (localStorage.getItem('formateur_session')) return 'formateur';
-    return localStorage.getItem('current_route') || 'visitor';
+    if (sessionStorage.getItem('apprenant_session')) return 'apprenant';
+    if (sessionStorage.getItem('admin_session')) return 'admin';
+    if (sessionStorage.getItem('formateur_session')) return 'formateur';
+    return sessionStorage.getItem('current_route') || 'visitor';
   });
   const [loginRole, setLoginRole] = useState(null);
   const [resetTokenInfo, setResetTokenInfo] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('current_route', route);
+    sessionStorage.setItem('current_route', route);
   }, [route]);
 
   useEffect(() => {

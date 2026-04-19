@@ -59,11 +59,11 @@ export default function LoginPage({ onLogin, onBack, onGoToRegister, forcedRole 
 
       if (userData) {
         // Nettoyer les éventuelles autres sessions en cours pour éviter les conflits de rôles
-        localStorage.removeItem('apprenant_session');
-        localStorage.removeItem('admin_session');
-        localStorage.removeItem('formateur_session');
+        sessionStorage.removeItem('apprenant_session');
+        sessionStorage.removeItem('admin_session');
+        sessionStorage.removeItem('formateur_session');
 
-        localStorage.setItem(
+        sessionStorage.setItem(
           role === "apprenant" ? "apprenant_session" : role === "admin" ? "admin_session" : "formateur_session",
           JSON.stringify(userData)
         );

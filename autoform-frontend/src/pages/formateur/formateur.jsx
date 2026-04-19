@@ -89,16 +89,16 @@ export default function FormateurPortal({ onGoToLogin }) {
   const downloadRef = useRef(null);
   const pdfInputRef = useRef(null);
 
-  // Auth state — restore from localStorage (set by centralized login page)
+  // Auth state — restore from sessionStorage (set by centralized login page)
   const [me, setMe] = useState(() => {
     try {
-      const saved = localStorage.getItem("formateur_session");
+      const saved = sessionStorage.getItem("formateur_session");
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
 
   function handleLogout() {
-    localStorage.removeItem("formateur_session");
+    sessionStorage.removeItem("formateur_session");
     setMe(null);
     if (onGoToLogin) onGoToLogin();
   }
@@ -111,7 +111,7 @@ export default function FormateurPortal({ onGoToLogin }) {
         if (remote && (remote.nom !== me.nom || remote.prenom !== me.prenom || remote.specialite !== me.specialite || remote.statut !== me.statut || remote.email !== me.email)) {
           const merged = { ...me, ...remote };
           setMe(merged);
-          localStorage.setItem("formateur_session", JSON.stringify(merged));
+          sessionStorage.setItem("formateur_session", JSON.stringify(merged));
         }
       }).catch(err => console.error("Sync error", err));
     }
@@ -417,9 +417,9 @@ export default function FormateurPortal({ onGoToLogin }) {
           ancien_mdp: ancienMdp,
           nouveau_mdp: nouveauMdp,
         });
-        // Mettre à jour la session localStorage
-        const session = JSON.parse(localStorage.getItem('formateur_session') || '{}');
-        localStorage.setItem('formateur_session', JSON.stringify({ ...session }));
+        // Mettre à jour la session sessionStorage
+        const session = JSON.parse(sessionStorage.getItem('formateur_session') || '{}');
+        sessionStorage.setItem('formateur_session', JSON.stringify({ ...session }));
         setMsg({ type: 'success', text: 'Mot de passe modifié avec succès !' });
         setAncienMdp(''); setNouveauMdp(''); setConfirmer('');
       } catch (err) {

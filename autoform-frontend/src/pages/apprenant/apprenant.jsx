@@ -135,10 +135,10 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
   const [cours, setCours]             = useState([]);
   const [loading, setLoading]         = useState(false);
 
-  // Auth state — restore from localStorage
+  // Auth state — restore from sessionStorage
   const [me, setMe] = useState(() => {
     try {
-      const saved = localStorage.getItem("apprenant_session");
+      const saved = sessionStorage.getItem("apprenant_session");
       return saved ? JSON.parse(saved) : null;
     } catch { return null; }
   });
@@ -150,7 +150,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
   }
 
   function handleLogout() {
-    localStorage.removeItem("apprenant_session");
+    sessionStorage.removeItem("apprenant_session");
     setMe(null);
   }
 
@@ -182,7 +182,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
          const fresh = freshRes.data;
          if (fresh) {
            const updated = { ...me, ...fresh };
-           localStorage.setItem("apprenant_session", JSON.stringify(updated));
+           sessionStorage.setItem("apprenant_session", JSON.stringify(updated));
            setMe(updated);
          }
       }).catch(console.error);
@@ -208,7 +208,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       const fresh = res.data;
       if (fresh) {
         const updated = { ...me, ...fresh };
-        localStorage.setItem("apprenant_session", JSON.stringify(updated));
+        sessionStorage.setItem("apprenant_session", JSON.stringify(updated));
         setMe(updated);
       }
       if (++done === total) setLoading(false);
@@ -343,7 +343,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       newRes.splice(idx, 1);
       api.put(`/apprenants/${me.id}`, { reservations_futures: newRes }).then(() => {
         const updated = { ...me, reservations_futures: newRes };
-        localStorage.setItem("apprenant_session", JSON.stringify(updated));
+        sessionStorage.setItem("apprenant_session", JSON.stringify(updated));
         setMe(updated);
       }).catch(err => alert("Erreur système lors de l'annulation."));
     };
@@ -904,7 +904,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
       api.put(`/apprenants/${me.id}`, payload).then(res => {
         alert("Profil mis à jour avec succès !");
-        localStorage.setItem("apprenant_session", JSON.stringify({ 
+        sessionStorage.setItem("apprenant_session", JSON.stringify({ 
           ...me, prenom: formData.prenom, nom: formData.nom, telephone: formData.telephone 
         }));
         setFormData({ ...formData, ancien_mdp: "", nouveau_mdp: "", confirm_mdp: "" });

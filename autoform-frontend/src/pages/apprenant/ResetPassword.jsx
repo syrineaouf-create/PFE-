@@ -1,4 +1,4 @@
-Ôªøimport { useState } from "react";
+import { useState } from "react";
 import api from "../../api";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -26,7 +26,7 @@ export default function ResetPasswordPage({ resetToken, role, onBackToLogin }) {
     setError(null);
 
     if (!mdp || mdp.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caract√®res.");
+      setError("Le mot de passe doit contenir au moins 8 caractËres.");
       return;
     }
 
@@ -41,11 +41,11 @@ export default function ResetPasswordPage({ resetToken, role, onBackToLogin }) {
       const res = await api.post(endpoint, { token: resetToken, nouveau_mdp: mdp });
       setSuccess(true);
       setTimeout(() => {
-        // Redirigeons vers le login apr√®s succ√®s, s'ils ne cliquent pas sur le bouton manuellement
+        // Redirigeons vers le login aprËs succËs, s'ils ne cliquent pas sur le bouton manuellement
         onBackToLogin();
       }, 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "Lien de r√©initialisation invalide ou expir√©.");
+      setError(err.response?.data?.message || "Lien de rÈinitialisation invalide ou expirÈ.");
     } finally {
       setLoading(false);
     }
@@ -81,20 +81,20 @@ export default function ResetPasswordPage({ resetToken, role, onBackToLogin }) {
           Nouveau mot de passe
         </h1>
         <p style={{ fontSize: 13, color: C.textMuted, textAlign: "center", margin: "0 0 24px 0" }}>
-          D√©finissez un nouveau mot de passe s√©curis√© pour votre compte.
+          DÈfinissez un nouveau mot de passe sÈcurisÈ pour votre compte.
         </p>
 
         {error && (
           <div style={{
             background: "#fce4ec", color: C.danger, padding: "12px 16px", borderRadius: 10,
             fontSize: 13, marginBottom: 20, border: "1px solid #f8bbd0"
-          }}>‚ö†Ô∏è {error}</div>
+          }}>?? {error}</div>
         )}
 
         {success ? (
           <div style={{ textAlign: "center" }}>
             <div style={{ background: "#e8f5e9", color: "#2e7d32", padding: "16px", borderRadius: 12, marginBottom: 20 }}>
-              ‚úÖ Mot de passe r√©initialis√© avec succ√®s !<br/>
+              ? Mot de passe rÈinitialisÈ avec succËs !<br/>
               Vous pouvez maintenant vous connecter.
             </div>
             <button
@@ -102,13 +102,13 @@ export default function ResetPasswordPage({ resetToken, role, onBackToLogin }) {
               style={{
                 background: "transparent", color: C.navy, border: "2px solid "+C.navy, padding: "12px 24px",
                 borderRadius: 10, fontWeight: 700, cursor: "pointer", width: "100%", fontSize: 14
-              }}>Retourner √† la connexion</button>
+              }}>Retourner ‡ la connexion</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div>
               <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: C.navy, marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Cr√©er un nouveau mot de passe
+                CrÈer un nouveau mot de passe
               </label>
               <div style={{ position: "relative" }}>
                 <input
@@ -116,7 +116,7 @@ export default function ResetPasswordPage({ resetToken, role, onBackToLogin }) {
                   required
                   value={mdp}
                   onChange={e => { setMdp(e.target.value); setError(null); }}
-                  placeholder="8 caract√®res, Maj, chiffre..."
+                  placeholder="8 caractËres, Maj, chiffre..."
                   autoComplete="new-password"
                   style={{
                     width: "100%", boxSizing: "border-box", padding: "13px 46px 13px 16px", borderRadius: 10,
