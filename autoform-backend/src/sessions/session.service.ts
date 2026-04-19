@@ -6,6 +6,7 @@ import { Formateur } from '../formateurs/formateur.entity';
 import { Apprenant } from '../apprenants/apprenant.entity';
 import { CreateSessionDto, UpdateSessionDto } from './session.dto';
 import { Repository, LessThanOrEqual, MoreThanOrEqual, Not } from 'typeorm';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class SessionsService {
@@ -16,6 +17,7 @@ export class SessionsService {
     private readonly formateurRepo: Repository<Formateur>,
     @InjectRepository(Apprenant)
     private readonly apprenantRepo: Repository<Apprenant>,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(dto: CreateSessionDto): Promise<Session> {
@@ -83,31 +85,14 @@ export class SessionsService {
         console.log(`[Smart Alert] Aucun candidat en attente pour ${session.formation}.`);
         return;
     }
-    console.log(`[Smart Alert] ${targets.length} candidat(s) trouvé(s). Envoi d'email via Ethereal SMTP...`);
+    console.log(`[Smart Alert] ${targets.length} candidat(s) trouvé(s). Envoi des emails via EmailService...`);
     
-    const account = await nodemailer.createTestAccount();
-    const transporter = nodemailer.createTransport({ host: account.smtp.host, port: account.smtp.port, secure: account.smtp.secure, auth: { user: account.user, pass: account.pass }});
-
     for (const user of targets) {
-       const info = await transporter.sendMail({
-           from: '"Waialys AI Automator" <no-reply@waialys.com>',
-           to: user.email,
-           subject: `🎯 Nouvelle Session Disponible : ${session.formation} !`,
-           html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #0f1c3f;">
-               <h2>Bonjour ${user.prenom || user.nom},</h2>
-               <p>Vous avez activé une alerte pour la formation <strong>${session.formation}</strong>.</p>
-               <p>🔥 Nous avons le plaisir de vous informer qu'une nouvelle session vient d'être ouverte !</p>
-               <div style="background: #eef2ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <strong>Date :</strong> Du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}<br/>
-                  <strong>Mode :</strong> ${(session as any).mode_formation || 'Campus'}
-               </div>
-               <p>Connectez-vous rapidement à votre espace apprenant pour confirmer votre inscription avant que la session ne soit complète.</p>
-               <br/><hr/><p><em>Ceci est un e-mail automatique du robot Waialys.</em></p>
-            </div>
-           `
-       });
-       console.log(`[Smart Alert] 🔔 Email Envoyé à ${user.email} ! Lisez-le ici: ${nodemailer.getTestMessageUrl(info)}`);
+       await this.emailService.sendSmartAlertEmail({ 
+           prenom: user.prenom || '', 
+           nom: user.nom || '', 
+           email: user.email 
+       }, session as any);
     }
   }
 
