@@ -210,9 +210,8 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
     Promise.all([api.get('/formations'), api.get('/sessions')]).then(([rf, rs]) => {
         const allF = rf.data?.data || rf.data || [];
-        const allS = rs.data?.data || rs.data || [];
-        const validS = allS.filter(s => s.statut !== 'Annulée' && s.statut !== 'Terminée');
-        setResFormations(allF.filter(f => f.statut === 'Active' && validS.some(vs => vs.formation === f.titre)));
+        // On affiche TOUTES les formations Actives pour permettre l'Alerte Email
+        setResFormations(allF.filter(f => f.statut === 'Active'));
     }).catch(()=>{});
   }, []);
 
@@ -961,33 +960,41 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
                       </select>
                     </div>
 
+                    {/* Gestion Intelligente des Sessions vs Alertes */}
                     {(finalFormationName && (!isTiaSelected || resFormState.niveau_tia)) && (
-                      <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Session disponible *</label>
-                        <select value={resFormState.session_id} onChange={e => setResFormState({...resFormState, session_id: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
-                          <option value="" disabled>Sélectionnez une session</option>
-                          {availableSessionsForRes.map(s => (
-                            <option key={s.id} value={s.id} disabled={s.overlap}>
-                              {new Date(s.date_debut).toLocaleDateString("fr-FR")} ➔ {new Date(s.date_fin).toLocaleDateString("fr-FR")} 
-                              {s.overlap ? ' [Impossible : Chevauchement de dates]' : ` (${s.inscrits}/${s.places} inscrits)`}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      availableSessionsForRes.length > 0 ? (
+                        <div>
+                          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>Session disponible *</label>
+                          <select value={resFormState.session_id} onChange={e => setResFormState({...resFormState, session_id: e.target.value})} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", fontSize: 14 }}>
+                            <option value="" disabled>Sélectionnez une session</option>
+                            {availableSessionsForRes.map(s => (
+                              <option key={s.id} value={s.id} disabled={s.overlap}>
+                                {new Date(s.date_debut).toLocaleDateString("fr-FR")} ➔ {new Date(s.date_fin).toLocaleDateString("fr-FR")} 
+                                {s.overlap ? ' [Impossible : Chevauchement de dates]' : ` (${s.inscrits}/${s.places} inscrits)`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div style={{ background: "#eef2ff", border: "1px solid #1e40af40", borderLeft: "4px solid #1e40af", padding: "16px", borderRadius: 8 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#1e3a8a", marginBottom: 4 }}>📌 Alertes Waialys AI</div>
+                          <div style={{ fontSize: 13, color: "#1e40af", lineHeight: 1.4 }}>Aucune session n'est actuellement planifiée pour cette formation.<br/>En confirmant, notre robot vous enverra un e-mail à la seconde où une place se libère !</div>
+                        </div>
+                      )
                     )}
                   </div>
 
                   {resApiState === 'error' && <div style={{ marginTop: 16, color: C.danger, fontSize: 13, fontWeight: 600 }}>Erreur inattendue. Veuillez réessayer.</div>}
-                  {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>Réservation confirmée avec succès ! Redirection...</div>}
+                  {resApiState === 'success' && <div style={{ marginTop: 16, color: C.success, fontSize: 13, fontWeight: 600 }}>C'est noté ! Traitement en cours...</div>}
 
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 32 }}>
                     <button onClick={() => setShowResModal(false)} style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: "transparent", color: C.textMuted, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
                     <button 
-                      disabled={!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || !resFormState.session_id || resApiState === 'loading' || resApiState === 'success'} 
+                      disabled={!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || (availableSessionsForRes.length > 0 && !resFormState.session_id) || resApiState === 'loading' || resApiState === 'success'} 
                       onClick={handleReserveSubmit} 
-                      style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer", opacity: (!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || !resFormState.session_id) ? 0.5 : 1 }}
+                      style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontWeight: 700, cursor: "pointer", opacity: (!resFormState.formation || (isTiaSelected && !resFormState.niveau_tia) || (availableSessionsForRes.length > 0 && !resFormState.session_id)) ? 0.5 : 1, display: "flex", alignItems: "center", gap: 8 }}
                     >
-                      {resApiState === 'loading' ? 'Envoi...' : 'Confirmer'}
+                      {resApiState === 'loading' ? 'Envoi...' : (availableSessionsForRes.length === 0 && finalFormationName) ? '🔔 M\'alerter par e-mail' : 'Confirmer l\'inscription'}
                     </button>
                   </div>
                 </div>

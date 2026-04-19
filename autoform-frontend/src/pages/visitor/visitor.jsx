@@ -65,12 +65,9 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
         const validSessions = allS.filter(s => s.statut !== 'Annulée' && s.statut !== 'Terminée');
         setAllSessions(validSessions);
 
-        // On ne garde que les formations Actives QUI ONT au moins une session ouverte
-        const formationsWithSessions = allF.filter(f => 
-          f.statut === 'Active' && validSessions.some(vs => vs.formation === f.titre)
-        );
-        
-        setFormations(formationsWithSessions);
+        // On affiche TOUTES les formations Actives pour permettre le Waitlisting (Alertes E-mail)
+        const activeFormations = allF.filter(f => f.statut === 'Active');
+        setFormations(activeFormations);
         setLoading(false);
       })
       .catch((err) => {
@@ -353,7 +350,6 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
                 </div>
               )}
 
-              {/* SESSION selon la formation choisie */}
               {form.formation && (
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.navy, marginBottom: 6 }}>
@@ -361,17 +357,18 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
                   </label>
                   {filteredSessions.length > 0 ? (
                     <select
+                      required
                       value={form.session_id}
                       onChange={e => setForm({ ...form, session_id: e.target.value })}
-                      style={{ width: '100%', boxSizing: 'border-box', padding: '12px 16px', borderRadius: 8, border: `1px solid ${C.accent}`, fontFamily: "inherit", fontSize: 14, outline: 'none', background: '#fff' }}
+                      style={{ width: '100%', boxSizing: 'border-box', padding: '12px 16px', borderRadius: 8, border: `1px solid ${C.border}`, fontFamily: "inherit", fontSize: 14, outline: 'none', background: '#fff' }}
                     >
-                      <option value="">-- Aucune session sélectionnée --</option>
+                      <option value="" disabled>Sélectionnez une date de session</option>
                       {filteredSessions.map(s => (
                         <option key={s.id} value={s.id}>
-                          {s.date_debut ? new Date(s.date_debut).toLocaleDateString('fr-FR') : 'Date TBD'}
-                          {s.date_fin ? ` → ${new Date(s.date_fin).toLocaleDateString('fr-FR')}` : ''}
-                          {s.formateur ? ` — ${s.formateur}` : ''}
-                          {` ${ (s.places || 10) - (s.inscrits || 0)} place(s) restante(s))`}
+                          {new Date(s.date_debut).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric' })} 
+                          {' -> '} 
+                          {new Date(s.date_fin).toLocaleDateString("fr-FR", { day: '2-digit', month: '2-digit', year: 'numeric' })} 
+                          ({s.inscrits}/{s.places} inscrits)
                         </option>
                       ))}
                     </select>
@@ -383,7 +380,7 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
                 </div>
               )}
 
-              <button type="submit" style={{ background: '#ffffff', color: C.navy, padding: "14px", border: `1.5px solid ${C.navy}`, borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 10, transition: 'all 0.2s' }} onMouseOver={e => { e.target.style.background = C.navy; e.target.style.color = '#ffffff'; }} onMouseOut={e => { e.target.style.background = '#ffffff'; e.target.style.color = C.navy; }}>Valider mon inscription</button>
+              <button type="submit" disabled={form.formation && filteredSessions.length > 0 && !form.session_id} style={{ background: (form.formation && filteredSessions.length === 0) ? C.accent : '#ffffff', color: (form.formation && filteredSessions.length === 0) ? '#fff' : C.navy, padding: "14px", border: `1.5px solid ${(form.formation && filteredSessions.length === 0) ? C.accent : C.navy}`, borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: "pointer", marginTop: 10, transition: 'all 0.2s', opacity: (form.formation && filteredSessions.length > 0 && !form.session_id) ? 0.5 : 1 }} onMouseOver={e => { e.target.style.background = C.navy; e.target.style.color = '#ffffff'; e.target.style.borderColor = C.navy; }} onMouseOut={e => { e.target.style.background = (form.formation && filteredSessions.length === 0) ? C.accent : '#ffffff'; e.target.style.color = (form.formation && filteredSessions.length === 0) ? '#fff' : C.navy; e.target.style.borderColor = (form.formation && filteredSessions.length === 0) ? C.accent : C.navy; }}>{(form.formation && filteredSessions.length === 0) ? '🔔 M\'alerter par e-mail' : 'Valider mon inscription'}</button>
             </form>
           )}
           </div>

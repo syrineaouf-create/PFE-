@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import * as nodemailer from 'nodemailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from './session.entity';
 import { Formateur } from '../formateurs/formateur.entity';
@@ -56,9 +57,52 @@ export class SessionsService {
 
     const session = this.repo.create(dto);
     try {
-      return await this.repo.save(session);
+      const saved = await this.repo.save(session);
+      // Déclencheur intelligent asynchrone (ne bloque pas la requête)
+      this.triggerIntelligentEmailAlert(saved).catch(err => console.error("Email Bot Error", err));
+      return saved;
     } catch (e: any) {
       throw new BadRequestException(e.message || 'Erreur lors de la sauvegarde de la session');
+    }
+  }
+
+  private async triggerIntelligentEmailAlert(session: Session) {
+    console.log(`[Smart Alert] Scan pour ${session.formation}...`);
+    const allApprenants = await this.apprenantRepo.find();
+    const targets = allApprenants.filter(a => {
+       if (!a.reservations_futures || !Array.isArray(a.reservations_futures)) return false;
+       return a.reservations_futures.some(r => r.formation === session.formation && !r.session_id);
+    });
+
+    if (targets.length === 0) {
+        console.log(`[Smart Alert] Aucun candidat en attente pour ${session.formation}.`);
+        return;
+    }
+    console.log(`[Smart Alert] ${targets.length} candidat(s) trouvé(s). Envoi d'email via Ethereal SMTP...`);
+    
+    const account = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({ host: account.smtp.host, port: account.smtp.port, secure: account.smtp.secure, auth: { user: account.user, pass: account.pass }});
+
+    for (const user of targets) {
+       const info = await transporter.sendMail({
+           from: '"Waialys AI Automator" <no-reply@waialys.com>',
+           to: user.email,
+           subject: `🎯 Nouvelle Session Disponible : ${session.formation} !`,
+           html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #0f1c3f;">
+               <h2>Bonjour ${user.prenom || user.nom},</h2>
+               <p>Vous avez activé une alerte pour la formation <strong>${session.formation}</strong>.</p>
+               <p>🔥 Nous avons le plaisir de vous informer qu'une nouvelle session vient d'être ouverte !</p>
+               <div style="background: #eef2ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <strong>Date :</strong> Du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}<br/>
+                  <strong>Mode :</strong> ${session.mode_formation || 'Campus'}
+               </div>
+               <p>Connectez-vous rapidement à votre espace apprenant pour confirmer votre inscription avant que la session ne soit complète.</p>
+               <br/><hr/><p><em>Ceci est un e-mail automatique du robot Waialys.</em></p>
+            </div>
+           `
+       });
+       console.log(`[Smart Alert] 🔔 Email Envoyé à ${user.email} ! Lisez-le ici: ${nodemailer.getTestMessageUrl(info)}`);
     }
   }
 
