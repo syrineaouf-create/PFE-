@@ -887,6 +887,8 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       prenom: me.prenom || "",
       nom: me.nom || "",
       telephone: me.telephone || "",
+      age: me.age || "",
+      sexe: me.sexe || "",
       ancien_mdp: "",
       nouveau_mdp: "",
       confirm_mdp: ""
@@ -913,7 +915,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       api.put(`/apprenants/${me.id}`, payload).then(res => {
         alert("Profil mis à jour avec succès !");
         localStorage.setItem("apprenant_session", JSON.stringify({ 
-          ...me, prenom: formData.prenom, nom: formData.nom, telephone: formData.telephone 
+          ...me, prenom: formData.prenom, nom: formData.nom, telephone: formData.telephone, age: formData.age, sexe: formData.sexe
         }));
         setFormData({ ...formData, ancien_mdp: "", nouveau_mdp: "", confirm_mdp: "" });
       }).catch(err => {
@@ -942,9 +944,23 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
               </div>
             </div>
 
-            <div>
-              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Téléphone</label>
-              <input type="text" name="telephone" value={formData.telephone} onChange={handleChange} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+            <div style={{ display: "flex", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Téléphone</label>
+                <input type="text" name="telephone" value={formData.telephone} onChange={handleChange} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Âge</label>
+                <input type="number" name="age" value={formData.age} onChange={handleChange} min="18" max="99" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Sexe</label>
+                <select name="sexe" value={formData.sexe} onChange={handleChange} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}`, outline: "none", background: C.white }}>
+                  <option value="" disabled>Sélectionnez</option>
+                  <option value="Femme">Femme</option>
+                  <option value="Homme">Homme</option>
+                </select>
+              </div>
             </div>
 
             <div style={{ marginTop: 10, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
