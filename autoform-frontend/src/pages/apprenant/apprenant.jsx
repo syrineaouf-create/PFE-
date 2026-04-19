@@ -751,15 +751,9 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
     const hasHistory = me.historique_formations && me.historique_formations.length > 0;
 
-    if (!isSessionFinished && !hasHistory) {
-      return null;
-    }
-
     return (
       <>
-        {isSessionFinished && (
-          <>
-            {/* Score overview */}
+        {/* Score overview */}
         <Card style={{ marginBottom: 20 }}>
           <SectionTitle>Résultats &amp; Certificats</SectionTitle>
 
@@ -850,8 +844,6 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             </div>
           )}
         </Card>
-        </>
-        )}
 
         {hasHistory && (
           <div style={{ marginTop: 32 }}>
@@ -1032,7 +1024,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8, paddingLeft: 8, whiteSpace: "nowrap" }}>
               Espace Étudiant
             </div>
-            {NAV.filter(item => isSessionFinished || item.id !== "resultats").map(item => {
+            {NAV.map(item => {
               const isActive = activeTab === item.id;
               return (
                 <button
