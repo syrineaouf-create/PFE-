@@ -14,7 +14,7 @@ import { JwtStrategy } from './jwt.strategy';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'une_cle_secrete_tres_complexe_pour_le_pfe_2026',
         signOptions: {
-          expiresIn: '1d', // Le token expire dans 1 jour
+          expiresIn: '60d', // Session persistante de 60 jours (Remember me)
         },
       }),
     }),
