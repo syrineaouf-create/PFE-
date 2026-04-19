@@ -898,6 +898,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
       const payload = { ...formData };
       delete payload.confirm_mdp;
+      if (payload.age) payload.age = Number(payload.age);
 
       if (!payload.nouveau_mdp) {
         delete payload.ancien_mdp;
