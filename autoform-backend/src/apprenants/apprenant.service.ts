@@ -192,17 +192,33 @@ export class ApprenantsService {
   // ── UPDATE ───────────────────────────────────────────────────
   async update(id: number, dto: UpdateApprenantDto): Promise<Apprenant> {
     const apprenant = await this.findOne(id);
+    const reqDto = dto as any;
     
-    // Hash password if modified
-    if ((dto as any).mot_de_passe) {
-      if ((dto as any).mot_de_passe.trim() !== '') {
-        (dto as any).mot_de_passe = await bcrypt.hash((dto as any).mot_de_passe, 10);
+    // Routine de changement de mot de passe par l'utilisateur
+    if (reqDto.nouveau_mdp) {
+      if (!reqDto.ancien_mdp) {
+        throw new BadRequestException("L'ancien mot de passe est requis pour le modifier.");
+      }
+      const isMatch = await bcrypt.compare(reqDto.ancien_mdp, apprenant.mot_de_passe);
+      if (!isMatch) {
+        throw new BadRequestException("L'ancien mot de passe est incorrect.");
+      }
+      apprenant.mot_de_passe = await bcrypt.hash(reqDto.nouveau_mdp, 10);
+      delete reqDto.nouveau_mdp;
+      delete reqDto.ancien_mdp;
+      delete reqDto.mot_de_passe;
+    }
+
+    // Hash password if modified directly (e.g. by admin force-update)
+    if (reqDto.mot_de_passe) {
+      if (reqDto.mot_de_passe.trim() !== '') {
+        reqDto.mot_de_passe = await bcrypt.hash(reqDto.mot_de_passe, 10);
       } else {
-        delete (dto as any).mot_de_passe; // Prevent empty password updates
+        delete reqDto.mot_de_passe; // Prevent empty password updates
       }
     }
 
-    Object.assign(apprenant, dto);
+    Object.assign(apprenant, reqDto);
     return this.repo.save(apprenant);
   }
 

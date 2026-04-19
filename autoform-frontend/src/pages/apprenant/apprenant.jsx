@@ -878,22 +878,37 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       prenom: me.prenom || "",
       nom: me.nom || "",
       telephone: me.telephone || "",
-      mot_de_passe: ""
+      ancien_mdp: "",
+      nouveau_mdp: "",
+      confirm_mdp: ""
     });
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSave = (e) => {
       e.preventDefault();
+      
+      if (formData.nouveau_mdp) {
+        if (!formData.ancien_mdp) return alert("Veuillez renseigner votre ancien mot de passe.");
+        if (formData.nouveau_mdp !== formData.confirm_mdp) return alert("Les nouveaux mots de passe ne correspondent pas !");
+      }
+
       const payload = { ...formData };
-      if (!payload.mot_de_passe) delete payload.mot_de_passe;
+      delete payload.confirm_mdp;
+
+      if (!payload.nouveau_mdp) {
+        delete payload.ancien_mdp;
+        delete payload.nouveau_mdp;
+      }
 
       api.put(`/apprenants/${me.id}`, payload).then(res => {
         alert("Profil mis à jour avec succès !");
-        localStorage.setItem("apprenant_session", JSON.stringify({ ...me, ...formData }));
-        window.location.reload();
+        localStorage.setItem("apprenant_session", JSON.stringify({ 
+          ...me, prenom: formData.prenom, nom: formData.nom, telephone: formData.telephone 
+        }));
+        setFormData({ ...formData, ancien_mdp: "", nouveau_mdp: "", confirm_mdp: "" });
       }).catch(err => {
-        alert("Erreur lors de la mise à jour");
+        alert(err.response?.data?.message || "Erreur lors de la mise à jour");
       });
     };
 
@@ -923,9 +938,24 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
               <input type="text" name="telephone" value={formData.telephone} onChange={handleChange} style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
             </div>
 
-            <div>
-              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Nouveau mot de passe (laisser vide pour ne pas changer)</label>
-              <input type="password" name="mot_de_passe" value={formData.mot_de_passe} onChange={handleChange} placeholder="••••••••" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+            <div style={{ marginTop: 10, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+              <h4 style={{ color: C.navy, marginBottom: 12, fontSize: 14 }}>Changer le mot de passe</h4>
+              
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Ancien mot de passe</label>
+                <input type="password" name="ancien_mdp" value={formData.ancien_mdp} onChange={handleChange} placeholder="••••••••" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+              </div>
+
+              <div style={{ display: "flex", gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Nouveau mot de passe</label>
+                  <input type="password" name="nouveau_mdp" value={formData.nouveau_mdp} onChange={handleChange} placeholder="••••••••" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: C.navy }}>Confirmer nouveau mot de passe</label>
+                  <input type="password" name="confirm_mdp" value={formData.confirm_mdp} onChange={handleChange} placeholder="••••••••" style={{ width: "100%", padding: "12px", borderRadius: 8, border: `1px solid ${C.border}` }} />
+                </div>
+              </div>
             </div>
 
             <button type="submit" style={{ marginTop: 10, padding: "14px", borderRadius: 8, background: C.accent, color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
