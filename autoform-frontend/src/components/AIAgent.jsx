@@ -88,11 +88,11 @@ export default function AIAgent() {
             borderBottom: `2px solid #ffffff`
           }}>
             <div style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={22} color={C.accent} />
+              <Bot size={22} color="#fff" />
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 16 }}>WaialysBot 4.0</div>
-              <div style={{ fontSize: 11, color: C.accent }}>Expert Industriel Virtuel</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)' }}>Expert Industriel Virtuel</div>
             </div>
           </div>
 
