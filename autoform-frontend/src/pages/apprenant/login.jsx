@@ -1,6 +1,6 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import api from "../../api";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Home } from "lucide-react";
 
 const C = {
   navy:       "#0f1c3f",
@@ -164,7 +164,7 @@ export default function LoginPage({ onLogin, onBack, onGoToRegister, forcedRole 
             onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "#fff"; }}
             onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
           >
-            ← Retour au site
+            <Home size={15} /> Home
           </button>
         )}
 
