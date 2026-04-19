@@ -238,10 +238,10 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
   const ini = `${(me.prenom || me.nom || "?")[0]}`.toUpperCase();
   // On filtre par session_id (la session assignée à cet apprenant)
-  // Si pas de session_id, on replie sur le nom de formation
+  // Si pas de session_id, on replie sur le nom de formation (en ignorant les sessions terminées)
   const mySessions = me.session_id
     ? sessions.filter(s => s.id === me.session_id)
-    : sessions.filter(s => s.formation === me.formation);
+    : sessions.filter(s => s.formation === me.formation && s.statut !== "Terminée");
   
   // --- LOGIQUE FILTRES RÉSERVATION SAAS ---
   const meBase = (me?.formation || "").toLowerCase();
