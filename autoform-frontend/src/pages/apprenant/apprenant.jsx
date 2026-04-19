@@ -819,8 +819,8 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
                   pointerEvents: "none"
                 }} />
               ))}
-              <GraduationCap size={60} color={C.textMuted} style={{ display: "block", marginBottom: 16, margin: "0 auto" }} />
-              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: C.accent, textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 16 }}>
+              <GraduationCap size={60} color={"rgba(255,255,255,0.7)"} style={{ display: "block", marginBottom: 16, margin: "0 auto" }} />
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 14, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: 16 }}>
                 Certificat de Réussite
               </div>
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 700, color: "#fff", marginBottom: 8 }}>
