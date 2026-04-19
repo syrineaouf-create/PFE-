@@ -157,7 +157,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
   const handleReserveSubmit = () => {
     setResApiState('loading');
-    api.post('/apprenants', {
+    const payload = {
       nom: me.nom || "Utilisateur",
       prenom: me.prenom || "",
       email: me.email,
@@ -165,9 +165,13 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
       formation: resFormState.formation,
       niveau_tia: resFormState.niveau_tia,
       mode_formation: resFormState.mode_formation,
-      session_id: resFormState.session_id,
       profil_candidat: me.profil || 'Étudiant'
-    }).then(res => {
+    };
+    if (resFormState.session_id) {
+       payload.session_id = Number(resFormState.session_id);
+    }
+
+    api.post('/apprenants', payload).then(res => {
       setResApiState('success');
       setTimeout(() => {
         setResApiState('');
