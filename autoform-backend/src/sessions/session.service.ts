@@ -120,19 +120,24 @@ export class SessionsService {
       }
 
       if (session.date_debut && session.date_fin) {
-          const startNum = new Date(session.date_debut).setHours(0,0,0,0);
-          const endNum = new Date(session.date_fin).setHours(0,0,0,0);
+          try {
+            const startStr = new Date(session.date_debut).toISOString().split('T')[0];
+            const endStr = new Date(session.date_fin).toISOString().split('T')[0];
+            const todayStr = new Date().toISOString().split('T')[0];
 
-          // Auto-clôture
-          if (endNum < todayNum && (session.statut === 'Planifiée' || session.statut === 'En cours')) {
-            session.statut = 'Terminée';
-            needsSave = true;
-          }
+            // Auto-clôture
+            if (endStr < todayStr && (session.statut === 'Planifiée' || session.statut === 'En cours')) {
+              session.statut = 'Terminée';
+              needsSave = true;
+            }
 
-          // Auto-démarrage
-          if (startNum <= todayNum && endNum >= todayNum && session.statut === 'Planifiée') {
-            session.statut = 'En cours';
-            needsSave = true;
+            // Auto-démarrage
+            if (startStr <= todayStr && endStr >= todayStr && session.statut === 'Planifiée') {
+              session.statut = 'En cours';
+              needsSave = true;
+            }
+          } catch(e) {
+            console.error("Erreur de parsing date sur la session ID", session.id, e);
           }
       }
 
