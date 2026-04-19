@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import api from "../../api";
-import { Eye, EyeOff, LayoutDashboard, User, History, BookOpen, GraduationCap, Users, Calendar, CheckCircle2, Inbox, LogOut, Lock, XCircle, Save } from "lucide-react";
+import { Eye, EyeOff, LayoutDashboard, User, History, BookOpen, GraduationCap, Users, Calendar, CheckCircle2, Inbox, LogOut, Lock, XCircle, Save, Trash2, Link } from "lucide-react";
 
 /* ─── Design tokens ─────────────────────────────────────────── */
 const C = {
@@ -82,6 +82,8 @@ export default function FormateurPortal({ onGoToLogin }) {
   // PDF upload modal state
   const [pdfModal, setPdfModal]         = useState(null); // formation object or null
   const [pdfFile, setPdfFile]           = useState(null);
+  const [pdfLink, setPdfLink]           = useState("");
+  const [pdfType, setPdfType]           = useState("fichier");
   const [pdfTitle, setPdfTitle]         = useState("");
   const [pdfMsg, setPdfMsg]             = useState("");
   const [pdfLoading, setPdfLoading]     = useState(false);
@@ -188,17 +190,28 @@ export default function FormateurPortal({ onGoToLogin }) {
       });
   }
 
-  /* ── Upload PDF de cours ── */
+  /* ── Upload PDF ou Lien de cours ── */
   function handleUploadPDF() {
     setPdfLoading(true);
-    const formData = new FormData();
-    formData.append('file', pdfFile);
-    formData.append('titre', pdfTitle || pdfFile.name);
-    formData.append('formation', pdfModal.titre); // l'entité attend la chaîne 'formation'
+    let request;
 
-    api.post(`/cours/upload`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    if (pdfType === "lien") {
+      request = api.post('/cours/link', {
+        formation: pdfModal.titre,
+        titre: pdfTitle || 'Lien de cours',
+        url: pdfLink
+      });
+    } else {
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+      formData.append('titre', pdfTitle || pdfFile.name);
+      formData.append('formation', pdfModal.titre);
+      request = api.post(`/cours/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+
+    request
       .then(res => {
         const doc = res.data.data || res.data;
         api.get(`/cours?formation=${encodeURIComponent(pdfModal.titre)}`).then(resCours => {
@@ -207,8 +220,8 @@ export default function FormateurPortal({ onGoToLogin }) {
             [pdfModal.id]: resCours.data || []
           }));
         });
-        setPdfMsg('Fichier uploadé avec succès !');
-        setPdfFile(null); setPdfTitle(''); setPdfLoading(false);
+        setPdfMsg(pdfType === "lien" ? 'Lien ajouté avec succès !' : 'Fichier uploadé avec succès !');
+        setPdfFile(null); setPdfTitle(''); setPdfLink(''); setPdfLoading(false);
         setTimeout(() => { setPdfMsg(''); setPdfModal(null); }, 2000);
       })
       .catch(err => {
@@ -530,6 +543,19 @@ export default function FormateurPortal({ onGoToLogin }) {
   }
 
   /* ── 4. GÉRER COURS ── */
+  const handleDeleteCours = async (docId, formationId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce support de cours ?")) return;
+    try {
+      await api.delete(`/cours/${docId}`);
+      setUploadedDocs(prev => ({
+        ...prev,
+        [formationId]: (prev[formationId] || []).filter(d => d.id !== docId)
+      }));
+    } catch (err) {
+      alert("Erreur lors de la suppression du cours.");
+    }
+  };
+
   function TabCours() {
     return (
       <>
@@ -554,8 +580,26 @@ export default function FormateurPortal({ onGoToLogin }) {
                 </div>
               )}
 
+              {/* Sélecteur de type */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 18 }}>
+                <button
+                  type="button"
+                  onClick={() => setPdfType("fichier")}
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, background: pdfType === "fichier" ? C.navy : C.bg, color: pdfType === "fichier" ? C.white : C.textMuted, border: `1px solid ${pdfType === "fichier" ? C.navy : C.border}`, cursor: "pointer", fontWeight: 600, fontSize: 13, transition: "all 0.2s" }}
+                >
+                  📄 Fichier Local
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPdfType("lien")}
+                  style={{ flex: 1, padding: "8px 0", borderRadius: 8, background: pdfType === "lien" ? C.navy : C.bg, color: pdfType === "lien" ? C.white : C.textMuted, border: `1px solid ${pdfType === "lien" ? C.navy : C.border}`, cursor: "pointer", fontWeight: 600, fontSize: 13, transition: "all 0.2s" }}
+                >
+                  🔗 Lien (YouTube, Drive...)
+                </button>
+              </div>
+
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>Titre du document</div>
+                <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>Titre du support</div>
                 <input
                   type="text"
                   placeholder="Ex: Chapitre 1 — Introduction"
@@ -567,44 +611,60 @@ export default function FormateurPortal({ onGoToLogin }) {
                 />
               </div>
 
-              {/* Zone drag & drop */}
-              <div
-                onClick={() => pdfInputRef.current?.click()}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setPdfFile(f); }}
-                style={{
-                  border: `2px dashed ${pdfFile ? C.accent : C.border}`,
-                  borderRadius: 14, padding: "32px 20px", textAlign: "center",
-                  cursor: "pointer", marginBottom: 20,
-                  background: pdfFile ? `${C.accent}08` : C.bg, transition: "all 0.2s"
-                }}
-              >
-                <input ref={pdfInputRef} type="file" accept="*/*" style={{ display: "none" }}
-                  onChange={e => setPdfFile(e.target.files[0] || null)} />
-                {pdfFile ? (
-                  <>
-                    <div style={{ fontSize: 40, marginBottom: 8 }}>📄</div>
-                    <div style={{ fontWeight: 700, color: C.navy, fontSize: 14 }}>{pdfFile.name}</div>
-                    <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>{(pdfFile.size / 1024).toFixed(1)} Ko</div>
-                    <div style={{ fontSize: 12, color: C.accent, marginTop: 8 }}>Cliquer pour changer de fichier</div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 44, marginBottom: 10 }}>📂</div>
-                    <div style={{ fontWeight: 600, color: C.navy, fontSize: 14 }}>Glisser-déposer un fichier ici</div>
-                    <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>ou cliquer pour parcourir vos fichiers</div>
-                    <div style={{ marginTop: 10, display: "inline-block", padding: "3px 14px", background: C.white, borderRadius: 20, fontSize: 11, color: C.textMuted, border: `1px solid ${C.border}` }}>Tout format accepté (PDF, Image, Vidéo, Archive...)</div>
-                  </>
-                )}
-              </div>
+              {pdfType === "fichier" ? (
+                /* Zone drag & drop */
+                <div
+                  onClick={() => pdfInputRef.current?.click()}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setPdfFile(f); }}
+                  style={{
+                    border: `2px dashed ${pdfFile ? C.accent : C.border}`,
+                    borderRadius: 14, padding: "32px 20px", textAlign: "center",
+                    cursor: "pointer", marginBottom: 20,
+                    background: pdfFile ? `${C.accent}08` : C.bg, transition: "all 0.2s"
+                  }}
+                >
+                  <input ref={pdfInputRef} type="file" accept="*/*" style={{ display: "none" }}
+                    onChange={e => setPdfFile(e.target.files[0] || null)} />
+                  {pdfFile ? (
+                    <>
+                      <div style={{ fontSize: 40, marginBottom: 8 }}>📄</div>
+                      <div style={{ fontWeight: 700, color: C.navy, fontSize: 14 }}>{pdfFile.name}</div>
+                      <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>{(pdfFile.size / 1024).toFixed(1)} Ko</div>
+                      <div style={{ fontSize: 12, color: C.accent, marginTop: 8 }}>Cliquer pour changer de fichier</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 44, marginBottom: 10 }}>📂</div>
+                      <div style={{ fontWeight: 600, color: C.navy, fontSize: 14 }}>Glisser-déposer un fichier ici</div>
+                      <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>ou cliquer pour parcourir vos fichiers</div>
+                      <div style={{ marginTop: 10, display: "inline-block", padding: "3px 14px", background: C.white, borderRadius: 20, fontSize: 11, color: C.textMuted, border: `1px solid ${C.border}` }}>Tout format accepté (PDF, Image, Vidéo, Archive...)</div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                /* Zone Lien externe */
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>URL du lien</div>
+                  <input
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={pdfLink}
+                    onChange={e => setPdfLink(e.target.value)}
+                    style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, outline: "none", boxSizing: "border-box" }}
+                    onFocus={e => e.target.style.borderColor = C.accent}
+                    onBlur={e => e.target.style.borderColor = C.border}
+                  />
+                </div>
+              )}
 
               <div style={{ display: "flex", gap: 12 }}>
                 <button
                   onClick={handleUploadPDF}
-                  disabled={pdfLoading || !pdfFile}
-                  style={{ flex: 1, padding: "13px 0", background: pdfFile ? C.navy : "#ccc", color: C.white, border: "none", borderRadius: 10, cursor: pdfFile ? "pointer" : "not-allowed", fontWeight: 700, fontSize: 15, opacity: pdfLoading ? 0.6 : 1 }}
+                  disabled={pdfLoading || (pdfType === "fichier" ? !pdfFile : !pdfLink)}
+                  style={{ flex: 1, padding: "13px 0", background: (pdfType === "fichier" ? pdfFile : pdfLink) ? C.navy : "#ccc", color: C.white, border: "none", borderRadius: 10, cursor: (pdfType === "fichier" ? pdfFile : pdfLink) ? "pointer" : "not-allowed", fontWeight: 700, fontSize: 15, opacity: pdfLoading ? 0.6 : 1 }}
                 >
-                  {pdfLoading ? "Upload en cours…" : "📤 Uploader le fichier"}
+                  {pdfLoading ? "Enregistrement…" : (pdfType === "fichier" ? "📤 Uploader le fichier" : "🔗 Ajouter le lien")}
                 </button>
                 <button
                   onClick={() => setPdfModal(null)}
@@ -654,13 +714,22 @@ export default function FormateurPortal({ onGoToLogin }) {
                       <div style={{ marginBottom: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Supports de cours</div>
                         {docs.map((doc, i) => (
-                          <a key={i} href={doc.chemin_fichier ? 'http://localhost:3000' + doc.chemin_fichier : doc.url} target="_blank" rel="noreferrer"
-                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#fff8f0", borderRadius: 8, marginBottom: 6, textDecoration: "none", border: `1px solid ${C.accent}35` }}
-                          >
-                            <span style={{ fontSize: 18 }}>{doc.type === 'Vidéo' ? '🎥' : doc.type === 'Archive' ? '📦' : '📄'}</span>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: C.navy, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.titre || doc.name}</span>
-                            <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, flexShrink: 0 }}>Ouvrir ↗</span>
-                          </a>
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                            <a href={doc.chemin_fichier ? 'http://localhost:3000' + doc.chemin_fichier : doc.url} target="_blank" rel="noreferrer"
+                              style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "#fff8f0", borderRadius: 8, textDecoration: "none", border: `1px solid ${C.accent}35`, flex: 1 }}
+                            >
+                              <span style={{ fontSize: 18 }}>{doc.type === 'Vidéo' ? '🎥' : doc.type === 'Archive' ? '📦' : '📄'}</span>
+                              <span style={{ fontSize: 13, fontWeight: 600, color: C.navy, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{doc.titre || doc.name}</span>
+                              <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, flexShrink: 0 }}>Ouvrir ↗</span>
+                            </a>
+                            <button
+                              onClick={() => handleDeleteCours(doc.id, f.id)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: C.danger, padding: "8px" }}
+                              title="Supprimer ce support"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -680,7 +749,7 @@ export default function FormateurPortal({ onGoToLogin }) {
 
                     <button
                       disabled={me.statut !== "Actif"}
-                      onClick={() => { setPdfModal(f); setPdfFile(null); setPdfTitle(""); setPdfMsg(""); }}
+                      onClick={() => { setPdfModal(f); setPdfFile(null); setPdfLink(""); setPdfTitle(""); setPdfMsg(""); }}
                       style={{
                         width: "100%", padding: "11px 0",
                         background: me.statut === "Actif" ? `${C.accent}15` : "#f5f5f5",

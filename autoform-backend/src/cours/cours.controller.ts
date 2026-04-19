@@ -62,6 +62,24 @@ export class CoursController {
   }
 
   @Roles('admin', 'formateur')
+  @Post('link')
+  async createLink(@Body() body: any, @Req() req: any) {
+    const { formation, titre, url } = body;
+    if (!url) throw new Error("URL introuvable");
+
+    const ajoute_par = (req.user.prenom && req.user.nom) ? `${req.user.prenom} ${req.user.nom}` : (req.user.email || 'Formateur');
+
+    return this.coursService.create({
+      formation,
+      titre,
+      type: 'Lien Web',
+      chemin_fichier: null,
+      url: url,
+      ajoute_par
+    });
+  }
+
+  @Roles('admin', 'formateur')
   @Delete(':id')
   async deleteCours(@Param('id') id: number) {
     return this.coursService.delete(id);
