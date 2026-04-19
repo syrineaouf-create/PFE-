@@ -95,7 +95,7 @@ export class SessionsService {
                <p>🔥 Nous avons le plaisir de vous informer qu'une nouvelle session vient d'être ouverte !</p>
                <div style="background: #eef2ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
                   <strong>Date :</strong> Du ${new Date(session.date_debut).toLocaleDateString('fr-FR')} au ${new Date(session.date_fin).toLocaleDateString('fr-FR')}<br/>
-                  <strong>Mode :</strong> ${session.mode_formation || 'Campus'}
+                  <strong>Mode :</strong> ${(session as any).mode_formation || 'Campus'}
                </div>
                <p>Connectez-vous rapidement à votre espace apprenant pour confirmer votre inscription avant que la session ne soit complète.</p>
                <br/><hr/><p><em>Ceci est un e-mail automatique du robot Waialys.</em></p>
@@ -137,12 +137,16 @@ export class SessionsService {
               needsSave = true;
             }
           } catch(e) {
-            console.error("Erreur de parsing date sur la session ID", session.id, e);
+            console.error("Erreur parsing date session", session.id, e);
           }
       }
 
       if (needsSave) {
-        await this.repo.save(session);
+        try {
+          await this.repo.save(session);
+        } catch (err) {
+          console.error("Save error", err);
+        }
       }
     }
 

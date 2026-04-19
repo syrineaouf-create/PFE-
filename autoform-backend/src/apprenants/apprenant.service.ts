@@ -56,11 +56,11 @@ export class ApprenantsService {
           existing.session_id = session_id || null;
           existing.statut = 'En attente';
           existing.paiement = 'En attente';
-          existing.score_tp = null;
-          existing.score_theorique = null;
-          existing.taux_presence = null;
+          existing.score_tp = null as any;
+          existing.score_theorique = null as any;
+          existing.taux_presence = null as any;
           existing.reussite = 0;
-          existing.certificat_fichier = null;
+          existing.certificat_fichier = null as any;
           existing.compte_actif = false; // Rétrogradé en attente de validation Admin
 
           existing.telephone = apprenantData.telephone || existing.telephone;
