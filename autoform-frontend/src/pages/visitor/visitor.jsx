@@ -449,7 +449,7 @@ export default function VisitorPortal({ onLoginClick, onAdminLogin }) {
           {/* Map */}
           <div style={{ flex: 1, minWidth: 250, maxWidth: 300, height: 160, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <iframe 
-              src="https://maps.google.com/maps?q=Waialys+formation,+Sousse&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+              src="https://maps.google.com/maps?q=Avenue+Yasser+Arafat,+Sousse,+Tunisia&t=&z=15&ie=UTF8&iwloc=&output=embed" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 
