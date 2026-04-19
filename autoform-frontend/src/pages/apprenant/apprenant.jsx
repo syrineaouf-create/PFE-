@@ -239,14 +239,13 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
   const ini = `${(me.prenom || me.nom || "?")[0]}`.toUpperCase();
   // On filtre par session_id (la session assignée à cet apprenant)
   // Si pas de session_id, on affiche la formation principale + toutes les formations en liste d'attente (en ignorant les sessions terminées)
-  const mySessions = me.session_id
-    ? sessions.filter(s => s.id === me.session_id)
-    : sessions.filter(s => {
-        if (s.statut === "Terminée") return false;
-        const isMain = s.formation === me.formation;
-        const isWaitlisted = (me.reservations_futures || []).some(r => r.formation === s.formation);
-        return isMain || isWaitlisted;
-      });
+  const mySessions = sessions.filter(s => {
+    if (s.id === me.session_id) return true; // Toujours inclure MA session
+    if (s.statut === "Terminée") return false;
+    const isMain = s.formation === me.formation;
+    const isWaitlisted = (me.reservations_futures || []).some(r => r.formation === s.formation);
+    return isMain || isWaitlisted;
+  });
   
   // --- LOGIQUE FILTRES RÉSERVATION SAAS ---
   const meBase = (me?.formation || "").toLowerCase();
@@ -478,7 +477,7 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
                         {s.formation || me.formation}
                       </div>
                     </div>
-                    {!me.session_id && (
+                    {me.session_id !== s.id && (
                       <button 
                         onClick={() => confirmSession(s)} 
                         style={{ padding: "6px 14px", borderRadius: 8, background: C.success, color: "#fff", border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
