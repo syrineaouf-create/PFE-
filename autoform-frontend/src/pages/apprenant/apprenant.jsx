@@ -173,10 +173,19 @@ export default function ApprenantPortal({ onGoToLogin, onGoToVisitor }) {
 
     api.post('/apprenants', payload).then(res => {
       setResApiState('success');
+      // Silently refresh the student data to get the new reservation without reloading the page
+      api.get(`/apprenants/${me.id}`).then(freshRes => {
+         const fresh = freshRes.data;
+         if (fresh) {
+           const updated = { ...me, ...fresh };
+           localStorage.setItem("apprenant_session", JSON.stringify(updated));
+           setMe(updated);
+         }
+      }).catch(console.error);
+
       setTimeout(() => {
         setResApiState('');
         setShowResModal(false);
-        window.location.reload(); 
       }, 1500);
     }).catch(err => {
       console.error(err);
